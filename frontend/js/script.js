@@ -81,6 +81,30 @@ async function loginUser() {
     }
 }
 
+async function registerUser() {
+    try {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        if (!email || !password) {
+            showToast("Email aur password bharo", "danger");
+            return;
+        }
+        const res = await fetch(`${BASE_URL}/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: "Shekhar Kumar", email, password })
+        });
+        const data = await res.json();
+        if (data.user) {
+            showToast("Registered! Ab login karo");
+        } else {
+            showToast(data.error || "Error", "danger");
+        }
+    } catch (err) {
+        showToast("Server Error", "danger");
+    }
+}
+
 // ---------------------------Logout----------------------------
 function logout() {
     currentUser = null;
@@ -322,16 +346,16 @@ function renderReportTable(data) {
 
 // ---------------------------Save Profile ---------------------
 function saveProfile() {
-    const name  = document.getElementById("profileName").value.trim();
+    const name = document.getElementById("profileName").value.trim();
     const email = document.getElementById("profileEmail").value.trim();
     if (!name || !email) {
         showToast("Please fill both fields", "danger");
         return;
     }
     if (currentUser) {
-        currentUser.name  = name;
+        currentUser.name = name;
         currentUser.email = email;
-        document.getElementById("userName").innerText  = name;
+        document.getElementById("userName").innerText = name;
         document.getElementById("userEmail").innerText = email;
         document.getElementById("userAvatar").innerText = name.charAt(0).toUpperCase();
         showToast("Profile saved ✓");
@@ -353,7 +377,7 @@ async function resetApp() {
     if (!currentUser) { showToast("Login first", "danger"); return; }
     if (!confirm("Delete ALL expenses from database? This cannot be undone.")) return;
     try {
-        const res  = await fetch(`${BASE_URL}/expenses`);
+        const res = await fetch(`${BASE_URL}/expenses`);
         const data = await res.json();
         await Promise.all(
             data.map(e => fetch(`${BASE_URL}/delete-expense/${e.id}`, { method: "DELETE" }))
