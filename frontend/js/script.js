@@ -1,5 +1,5 @@
 let currentUser = null;
-const BASE_URL = "http://127.0.0.1:5000";
+const BASE_URL = "https://expense-tracker-backend-j2h7.onrender.com";
 window.barChartInst = null;
 window.pieChartInst = null;
 const CHART_COLORS = [
