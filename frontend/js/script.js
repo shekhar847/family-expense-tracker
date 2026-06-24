@@ -180,6 +180,7 @@ async function loadExpenses() {
         updateStats(data);
         renderCharts(data);
         renderReportTable(data);
+        renderRecentExpenses(data); // Dashboard recent expenses
     } catch (err) {
         console.log(err);
     }
@@ -219,6 +220,33 @@ function renderExpenseList(data) {
                 onclick="deleteExpense(${e.id})">
                 ✕
             </button>
+        </div>
+    `).join("");
+}
+
+function renderRecentExpenses(data) {
+    const container = document.getElementById("recentExpenses");
+    if (!container) return;
+
+    if (data.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">🗒</div>
+                <p>No expenses yet</p>
+            </div>
+        `;
+        return;
+    }
+
+    const recent = data.slice(0, 5);
+    container.innerHTML = recent.map(e => `
+        <div class="expense-item">
+            <span class="expense-cat-badge">${e.category}</span>
+            <span class="expense-title">${e.title}</span>
+            <span class="expense-date" style="font-size:11px;color:var(--text3);">
+                ${e.date ? new Date(e.date).toLocaleDateString("en-IN") : "-"}
+            </span>
+            <span class="expense-amount">₹${Number(e.amount).toFixed(2)}</span>
         </div>
     `).join("");
 }
