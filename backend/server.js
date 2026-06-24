@@ -151,7 +151,7 @@ app.get("/expenses/:user_id", async (req, res) => {
   try {
     const { user_id } = req.params;
     const result = await pool.query(
-      "SELECT id, user_id, title, amount, category, date, created_at FROM public.expenses WHERE user_id = $1 ORDER BY id DESC",
+      "SELECT id, user_id, title, amount, category, date FROM public.expenses WHERE user_id = $1 ORDER BY id DESC",
       [user_id]
     );
     res.json(result.rows);
