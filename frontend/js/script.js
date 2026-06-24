@@ -10,6 +10,11 @@ const CHART_COLORS = [
     "#ff5c5c",
     "#9b5cff"
 ];
+
+function toggleSidebar() {
+    const sidebar = document.querySelector(".sidebar");
+    sidebar.classList.toggle("open");
+}
 // ---------------------------Section---------------------------
 function showSection(id, el = null) {
     document.querySelectorAll(".section")
