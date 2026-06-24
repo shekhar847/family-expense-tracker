@@ -256,18 +256,17 @@ function filterExpenses() {
 function filterByMonth() {
     const filter = document.getElementById("filterMonth").value;
     const items = document.querySelectorAll(".expense-item");
-    const now = new Date();
 
+    // Pehle sab show karo
+    items.forEach(item => item.style.display = "");
+
+    if (filter === "all") return;
+
+    const now = new Date();
     items.forEach(item => {
-        if (filter === "all") {
-            item.style.display = "";
-            return;
-        }
         const dateText = item.querySelector(".expense-date")?.innerText?.trim();
-        if (!dateText) {
-            item.style.display = "";
-            return;
-        }
+        if (!dateText) return;
+
         const parts = dateText.split("/");
         const itemDate = new Date(parts[2], parts[1] - 1, parts[0]);
 
