@@ -54,7 +54,7 @@ async function loginUser() {
     try {
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
-        
+
         // Spinner show karo
         document.getElementById("loginCard").style.display = "none";
         document.getElementById("loadingSpinner").style.display = "block";
@@ -70,7 +70,7 @@ async function loginUser() {
             })
         });
         const data = await res.json();
-        
+
         // Spinner hide karo
         document.getElementById("loadingSpinner").style.display = "none";
 
@@ -154,7 +154,7 @@ async function addExpense() {
     const title = document.getElementById("title").value.trim();
     const amount = document.getElementById("amount").value.trim();
     const category = document.getElementById("category").value;
-    
+
     if (!title || !amount || !category) {
         showToast("Fill all fields", "danger");
         return;
@@ -338,6 +338,38 @@ function filterByMonth() {
             item.style.display = (
                 itemDate.getMonth() === lastMonth &&
                 itemDate.getFullYear() === lastYear
+            ) ? "" : "none";
+        }
+    });
+}
+
+function filterReport() {
+    const filter = document.getElementById("reportFilter").value;
+    const rows = document.querySelectorAll("#reportTableBody tr");
+    const now = new Date();
+
+    rows.forEach(row => {
+        if (filter === "all") {
+            row.style.display = "";
+            return;
+        }
+        const dateText = row.querySelectorAll("td")[4]?.innerText?.trim();
+        if (!dateText) return;
+
+        const parts = dateText.split("/");
+        const rowDate = new Date(parts[2], parts[1] - 1, parts[0]);
+
+        if (filter === "this") {
+            row.style.display = (
+                rowDate.getMonth() === now.getMonth() &&
+                rowDate.getFullYear() === now.getFullYear()
+            ) ? "" : "none";
+        } else if (filter === "last") {
+            const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+            const lastYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+            row.style.display = (
+                rowDate.getMonth() === lastMonth &&
+                rowDate.getFullYear() === lastYear
             ) ? "" : "none";
         }
     });
