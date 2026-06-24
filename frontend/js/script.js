@@ -207,6 +207,9 @@ function renderExpenseList(data) {
             <span class="expense-title">
                 ${e.title}
             </span>
+            <span class="expense-date" style="font-size:11px;color:var(--text3);">
+                ${e.created_at ? new Date(e.created_at).toLocaleDateString("en-IN") : "-"}
+            </span>
             <span class="expense-amount">
                 ₹${Number(e.amount).toFixed(2)}
             </span>
@@ -234,7 +237,7 @@ async function deleteExpense(id) {
     }
 }
 
-// ---------------------------Filter----------------------------
+// ---------------------------Filter Expenses-------------------
 function filterExpenses() {
     const q = document
         .getElementById("searchExpense")
@@ -247,6 +250,29 @@ function filterExpenses() {
             item.innerText.toLowerCase().includes(q)
                 ? ""
                 : "none";
+    });
+}
+
+function filterByMonth() {
+    const filter = document.getElementById("filterMonth").value;
+    const items = document.querySelectorAll(".expense-item");
+    const now = new Date();
+
+    items.forEach(item => {
+        const dateText = item.querySelector(".expense-date")?.innerText;
+        if (!dateText || filter === "all") {
+            item.style.display = "";
+            return;
+        }
+        const itemDate = new Date(dateText);
+        const sameYear = itemDate.getFullYear() === now.getFullYear();
+
+        if (filter === "this") {
+            item.style.display = (itemDate.getMonth() === now.getMonth() && sameYear) ? "" : "none";
+        } else if (filter === "last") {
+            const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+            item.style.display = (itemDate.getMonth() === lastMonth) ? "" : "none";
+        }
     });
 }
 
