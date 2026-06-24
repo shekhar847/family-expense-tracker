@@ -146,12 +146,13 @@ app.post("/add-expense", async (req, res) => {
   }
 });
 // -------------------Get Expense-------------------
-app.get("/expenses", async (req, res) => {
+app.get("/expenses/:user_id", async (req, res) => {
   try {
+    const { user_id } = req.params;
     const result = await pool.query(
-      "SELECT * FROM public.expenses ORDER BY id DESC"
+      "SELECT * FROM public.expenses WHERE user_id = $1 ORDER BY id DESC",
+      [user_id]
     );
-    console.log("EXPENSE DATA:", result.rows);
     res.json(result.rows);
   } catch (err) {
     console.log(err);

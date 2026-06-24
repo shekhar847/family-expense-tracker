@@ -162,16 +162,16 @@ async function addExpense() {
 
 // ---------------------------Load Expense----------------------
 async function loadExpenses() {
-    try {
-        const res = await fetch(`${BASE_URL}/expenses`);
-        const data = await res.json();
-        renderExpenseList(data);
-        updateStats(data);
-        renderCharts(data);
-        renderReportTable(data);
-    } catch (err) {
-        console.log(err);
-    }
+  try {
+    const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}`);
+    const data = await res.json();
+    renderExpenseList(data);
+    updateStats(data);
+    renderCharts(data);
+    renderReportTable(data);
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 // ---------------------------Expense List----------------------
