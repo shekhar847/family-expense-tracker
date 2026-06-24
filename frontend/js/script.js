@@ -475,15 +475,12 @@ function renderCharts(data) {
 
 // ---------------------------Report Table----------------------
 function renderReportTable(data) {
-    const tbody =
-        document.getElementById("reportTableBody");
+    const tbody = document.getElementById("reportTableBody");
     if (!tbody) return;
     if (data.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="5">
-                    No Data
-                </td>
+                <td colspan="5">No Data</td>
             </tr>
         `;
         return;
@@ -497,7 +494,7 @@ function renderReportTable(data) {
                 ₹${Number(e.amount).toFixed(2)}
             </td>
             <td>
-                ${e.created_at || "-"}
+                ${e.date ? new Date(e.date).toLocaleDateString("en-IN") : "-"}
             </td>
         </tr>
     `).join("");
