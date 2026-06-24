@@ -83,25 +83,36 @@ async function loginUser() {
 
 async function registerUser() {
     try {
+        const name = document.getElementById("regName").value.trim();
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
-        if (!email || !password) {
-            showToast("Email aur password bharo", "danger");
+        if (!name || !email || !password) {
+            showToast("Sab fields bharo", "danger");
             return;
         }
         const res = await fetch(`${BASE_URL}/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: "Shekhar Kumar", email, password })
+            body: JSON.stringify({ name, email, password })
         });
         const data = await res.json();
         if (data.user) {
             showToast("Registered! Ab login karo");
+            document.getElementById("nameGroup").style.display = "none";
         } else {
             showToast(data.error || "Error", "danger");
         }
     } catch (err) {
         showToast("Server Error", "danger");
+    }
+}
+
+function showRegisterForm() {
+    const nameGroup = document.getElementById("nameGroup");
+    if (nameGroup.style.display === "none") {
+        nameGroup.style.display = "block";
+    } else {
+        registerUser();
     }
 }
 
@@ -162,16 +173,16 @@ async function addExpense() {
 
 // ---------------------------Load Expense----------------------
 async function loadExpenses() {
-  try {
-    const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}`);
-    const data = await res.json();
-    renderExpenseList(data);
-    updateStats(data);
-    renderCharts(data);
-    renderReportTable(data);
-  } catch (err) {
-    console.log(err);
-  }
+    try {
+        const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}`);
+        const data = await res.json();
+        renderExpenseList(data);
+        updateStats(data);
+        renderCharts(data);
+        renderReportTable(data);
+    } catch (err) {
+        console.log(err);
+    }
 }
 
 // ---------------------------Expense List----------------------
