@@ -41,7 +41,7 @@
                 <span class="nav-icon">◉</span> Settings
             </div>
         </nav>
-        <div class="sidebar-user">
+        <div class="sidebar-user" id="sidebarUser" style="display:none;">
             <div class="user-card">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
                     <div class="user-avatar" id="userAvatar">?</div>
@@ -359,7 +359,7 @@
                     </div>
                     <div class="footer-tagline">Manage your daily expenses, smartly.</div>
                     <div class="footer-badges">
-                        <div class="footer-badges">
+                        <div class="footer-badges" id="footerBadges" style="display:none;">
                             <span class="footer-badge" title="Current Version">⚡ v2.0</span>
                             <button class="footer-badge" onclick="toggleTheme()">🌙 Dark Mode</button>
                             <button class="footer-badge" onclick="downloadReport()">↓ PDF Export</button>

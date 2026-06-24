@@ -72,6 +72,8 @@ async function loginUser() {
             document.getElementById("userAvatar").innerText = data.user.name.charAt(0).toUpperCase();
             document.getElementById("loginCard").style.display = "none";
             document.getElementById("dashboardContent").style.display = "block";
+            document.getElementById("sidebarUser").style.display = "block";
+            document.getElementById("footerBadges").style.display = "flex";
             showToast("Login Successful");
             loadExpenses();
         } else {
@@ -124,15 +126,13 @@ function showRegisterForm() {
 // ---------------------------Logout----------------------------
 function logout() {
     currentUser = null;
-    document.getElementById("userName").innerText =
-        "Guest User";
-    document.getElementById("userEmail").innerText =
-        "Not logged in";
+    document.getElementById("userName").innerText = "Guest User";
+    document.getElementById("userEmail").innerText = "Not logged in";
     document.getElementById("userAvatar").innerText = "?";
-    document.getElementById("dashboardContent").style.display =
-        "none";
-    document.getElementById("loginCard").style.display =
-        "block";
+    document.getElementById("dashboardContent").style.display = "none";
+    document.getElementById("loginCard").style.display = "block";
+    document.getElementById("sidebarUser").style.display = "none";
+    document.getElementById("footerBadges").style.display = "none";
     showToast("Logged out", "danger");
 }
 
