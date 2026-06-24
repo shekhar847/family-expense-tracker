@@ -190,6 +190,8 @@ function renderExpenseList(data) {
     const container =
         document.getElementById("expenseListContainer");
     if (!container) return;
+    const badge = document.getElementById("expenseCountBadge");
+    if (badge) badge.innerText = `${data.length} entries`;
     if (data.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
