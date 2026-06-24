@@ -54,6 +54,11 @@ async function loginUser() {
     try {
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
+        
+        // Spinner show karo
+        document.getElementById("loginCard").style.display = "none";
+        document.getElementById("loadingSpinner").style.display = "block";
+
         const res = await fetch(`${BASE_URL}/login`, {
             method: "POST",
             headers: {
@@ -65,24 +70,28 @@ async function loginUser() {
             })
         });
         const data = await res.json();
+        
+        // Spinner hide karo
+        document.getElementById("loadingSpinner").style.display = "none";
+
         if (data.user) {
             currentUser = data.user;
             document.getElementById("userName").innerText = data.user.name;
             document.getElementById("userEmail").innerText = data.user.email;
             document.getElementById("userAvatar").innerText = data.user.name.charAt(0).toUpperCase();
-            document.getElementById("loginCard").style.display = "none";
             document.getElementById("dashboardContent").style.display = "block";
             document.getElementById("sidebarUser").style.display = "block";
             document.getElementById("footerBadges").style.display = "flex";
             showToast("Login Successful");
             loadExpenses();
         } else {
-            showToast(
-                data.message || "Invalid Credentials",
-                "danger"
-            );
+            // Login fail hone pe wapas login card dikhao
+            document.getElementById("loginCard").style.display = "block";
+            showToast(data.message || "Invalid Credentials", "danger");
         }
     } catch (err) {
+        document.getElementById("loadingSpinner").style.display = "none";
+        document.getElementById("loginCard").style.display = "block";
         console.log(err);
         showToast("Server Error", "danger");
     }
