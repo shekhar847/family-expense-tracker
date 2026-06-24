@@ -389,6 +389,29 @@ function renderCharts(data) {
             }
         });
     }
+
+    // -----------------------Mini Chart (Dashboard)---------------------------
+    const miniCanvas = document.getElementById("miniChart");
+    if (miniCanvas) {
+        if (window.miniChartInst) {
+            window.miniChartInst.destroy();
+        }
+        window.miniChartInst = new Chart(miniCanvas, {
+            type: "doughnut",
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: CHART_COLORS
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "55%"
+            }
+        });
+    }
 }
 
 // ---------------------------Report Table----------------------
