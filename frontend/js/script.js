@@ -180,6 +180,7 @@ async function addExpense() {
 async function loadExpenses() {
     try {
         document.getElementById("loadingSpinner").style.display = "block";
+        await new Promise(resolve => setTimeout(resolve, 3000));
         const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}`);
         const data = await res.json();
         document.getElementById("loadingSpinner").style.display = "none";
