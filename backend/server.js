@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS public.expenses (
   title TEXT,
   amount NUMERIC(10,2),
   category TEXT,
-  date DATE DEFAULT CURRENT_DATE
+  date DATE DEFAULT CURRENT_DATE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`)
   .then(() => console.log("expenses table ready"))
   .catch(err => console.log("expenses table error:", err.message));
@@ -150,7 +151,7 @@ app.get("/expenses/:user_id", async (req, res) => {
   try {
     const { user_id } = req.params;
     const result = await pool.query(
-      "SELECT id, user_id, title, amount, category, created_at FROM public.expenses WHERE user_id = $1 ORDER BY id DESC",
+      "SELECT id, user_id, title, amount, category, date, created_at FROM public.expenses WHERE user_id = $1 ORDER BY id DESC",
       [user_id]
     );
     res.json(result.rows);

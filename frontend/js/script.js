@@ -208,7 +208,7 @@ function renderExpenseList(data) {
                 ${e.title}
             </span>
             <span class="expense-date" style="font-size:11px;color:var(--text3);">
-                ${e.created_at ? new Date(e.created_at).toLocaleDateString("en-IN") : "-"}
+                ${e.date ? new Date(e.date).toLocaleDateString("en-IN") : "-"}
             </span>
             <span class="expense-amount">
                 ₹${Number(e.amount).toFixed(2)}
