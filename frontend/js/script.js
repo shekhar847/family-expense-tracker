@@ -259,19 +259,27 @@ function filterByMonth() {
     const now = new Date();
 
     items.forEach(item => {
-        const dateText = item.querySelector(".expense-date")?.innerText;
+        const dateText = item.querySelector(".expense-date")?.innerText?.trim();
         if (!dateText || filter === "all") {
             item.style.display = "";
             return;
         }
-        const itemDate = new Date(dateText);
-        const sameYear = itemDate.getFullYear() === now.getFullYear();
+        // DD/M/YYYY format parse karo
+        const parts = dateText.split("/");
+        const itemDate = new Date(parts[2], parts[1] - 1, parts[0]);
 
         if (filter === "this") {
-            item.style.display = (itemDate.getMonth() === now.getMonth() && sameYear) ? "" : "none";
+            item.style.display = (
+                itemDate.getMonth() === now.getMonth() &&
+                itemDate.getFullYear() === now.getFullYear()
+            ) ? "" : "none";
         } else if (filter === "last") {
             const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
-            item.style.display = (itemDate.getMonth() === lastMonth) ? "" : "none";
+            const lastYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+            item.style.display = (
+                itemDate.getMonth() === lastMonth &&
+                itemDate.getFullYear() === lastYear
+            ) ? "" : "none";
         }
     });
 }
