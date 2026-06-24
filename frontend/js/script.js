@@ -259,12 +259,15 @@ function filterByMonth() {
     const now = new Date();
 
     items.forEach(item => {
-        const dateText = item.querySelector(".expense-date")?.innerText?.trim();
-        if (!dateText || filter === "all") {
+        if (filter === "all") {
             item.style.display = "";
             return;
         }
-        // DD/M/YYYY format parse karo
+        const dateText = item.querySelector(".expense-date")?.innerText?.trim();
+        if (!dateText) {
+            item.style.display = "";
+            return;
+        }
         const parts = dateText.split("/");
         const itemDate = new Date(parts[2], parts[1] - 1, parts[0]);
 
