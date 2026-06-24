@@ -151,16 +151,24 @@ async function addExpense() {
         showToast("Login first", "danger");
         return;
     }
-    const title =
-        document.getElementById("title").value.trim();
-    const amount =
-        document.getElementById("amount").value.trim();
-    const category =
-        document.getElementById("category").value;
+    const title = document.getElementById("title").value.trim();
+    const amount = document.getElementById("amount").value.trim();
+    const category = document.getElementById("category").value;
+    
     if (!title || !amount || !category) {
         showToast("Fill all fields", "danger");
         return;
     }
+    // Amount validation
+    if (Number(amount) <= 0) {
+        showToast("Amount 0 se zyada hona chahiye", "danger");
+        return;
+    }
+    if (Number(amount) > 1000000) {
+        showToast("Amount bahut zyada hai", "danger");
+        return;
+    }
+
     try {
         await fetch(`${BASE_URL}/add-expense`, {
             method: "POST",
