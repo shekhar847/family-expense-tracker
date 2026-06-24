@@ -179,14 +179,17 @@ async function addExpense() {
 // ---------------------------Load Expense----------------------
 async function loadExpenses() {
     try {
+        document.getElementById("loadingSpinner").style.display = "block";
         const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}`);
         const data = await res.json();
+        document.getElementById("loadingSpinner").style.display = "none";
         renderExpenseList(data);
         updateStats(data);
         renderCharts(data);
         renderReportTable(data);
-        renderRecentExpenses(data); // Dashboard recent expenses
+        renderRecentExpenses(data);
     } catch (err) {
+        document.getElementById("loadingSpinner").style.display = "none";
         console.log(err);
     }
 }

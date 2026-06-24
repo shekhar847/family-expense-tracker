@@ -505,6 +505,11 @@ select option {
     background: rgba(255, 92, 92, 0.2);
 }
 
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 /* -------------------Login Section----------------- */
 .login-wrapper {
     max-width: 400px;
