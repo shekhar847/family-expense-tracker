@@ -199,6 +199,7 @@ async function loadExpenses() {
         renderRecentExpenses(data);
     } catch (err) {
         document.getElementById("loadingSpinner").style.display = "none";
+        showToast("Server se connect nahi ho pa raha, please wait...", "danger");
         console.log(err);
     }
 }
