@@ -760,7 +760,6 @@ footer {
     padding: 28px 36px 24px;
     position: relative;
     overflow: hidden;
-    margin-left: var(--sidebar-w);
 }
 
 footer::before {
