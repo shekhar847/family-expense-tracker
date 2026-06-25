@@ -294,7 +294,7 @@
                     </div>
                 </div>
                 <div class="card-panel">
-                    <<div class="card-header-row">
+                    <div class="card-header-row">
                         <div class="card-title">Expense Log</div>
                         <div style="display:flex;align-items:center;gap:8px;">
                             <select id="reportFilter" onchange="filterReport()"
@@ -308,6 +308,7 @@
                                 ↓ Export PDF
                             </button>
                         </div>
+                    </div>
                 </div>
                 <div style="overflow-x:auto;">
                     <table class="report-table">
@@ -360,6 +361,17 @@
                     <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">This will permanently delete
                         all your recorded expenses.</p>
                     <button class="btn-danger-custom" onclick="resetApp()">Clear All Expenses</button>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">💰 Monthly Budget</div>
+                    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">
+                        Monthly budget set karo — exceed hone pe alert aayega.
+                    </p>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <input type="number" id="budgetInput" placeholder="e.g. 10000" style="max-width:200px;" min="0">
+                        <button class="btn-primary-custom" onclick="saveBudget()">Save Budget</button>
+                    </div>
+                    <div id="budgetStatus" style="margin-top:10px;font-size:13px;color:var(--text2);"></div>
                 </div>
             </div>
         </div>

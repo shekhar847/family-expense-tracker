@@ -205,6 +205,7 @@ async function loadExpenses() {
         renderCharts(data);
         renderReportTable(data);
         renderRecentExpenses(data);
+        checkBudget();
     } catch (err) {
         document.getElementById("loadingSpinner").style.display = "none";
         showToast("Server se connect nahi ho pa raha, please wait...", "danger");
@@ -630,4 +631,34 @@ function downloadReport() {
         console.log(err);
         showToast("PDF Error", "danger");
     }
+}
+
+function saveBudget() {
+    const budget = Number(document.getElementById("budgetInput").value);
+    if (!budget || budget <= 0) {
+        showToast("Valid budget daalo", "danger");
+        return;
+    }
+    localStorage.setItem("monthlyBudget", budget);
+    showToast("Budget saved!");
+    checkBudget();
+}
+
+function checkBudget() {
+    const budget = Number(localStorage.getItem("monthlyBudget"));
+    if (!budget) return;
+
+    const total = Number(document.getElementById("statMonth").innerText);
+    const status = document.getElementById("budgetStatus");
+    const remaining = budget - total;
+
+    if (remaining < 0) {
+        status.innerHTML = `<span style="color:var(--red);">⚠ Budget exceed ho gaya! ₹${Math.abs(remaining).toFixed(2)} zyada kharch kiya</span>`;
+        showToast(`⚠ Budget exceed! ₹${Math.abs(remaining).toFixed(2)} zyada`, "danger");
+    } else {
+        status.innerHTML = `<span style="color:#3dd9a4;">✓ ₹${remaining.toFixed(2)} remaining this month</span>`;
+    }
+
+    // Budget input mein saved value dikhao
+    document.getElementById("budgetInput").value = budget;
 }
