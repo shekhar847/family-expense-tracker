@@ -330,47 +330,45 @@
                     </table>
                 </div>
             </div>
-        </div>
-
-        <!-- --------------------------Setting--------------------------- -->
-        <div id="settingSection" class="section">
-            <div class="settings-section">
-                <div class="settings-title">👤 Profile</div>
-                <div class="two-col" style="gap:12px;">
-                    <div>
-                        <label class="form-label">Display Name</label>
-                        <input type="text" id="profileName" placeholder="Your name">
+            <!-- --------------------------Setting--------------------------- -->
+            <div id="settingSection" class="section">
+                <div class="settings-section">
+                    <div class="settings-title">👤 Profile</div>
+                    <div class="two-col" style="gap:12px;">
+                        <div>
+                            <label class="form-label">Display Name</label>
+                            <input type="text" id="profileName" placeholder="Your name">
+                        </div>
+                        <div>
+                            <label class="form-label">Email</label>
+                            <input type="email" id="profileEmail" placeholder="your@email.com">
+                        </div>
                     </div>
-                    <div>
-                        <label class="form-label">Email</label>
-                        <input type="email" id="profileEmail" placeholder="your@email.com">
+                    <button class="btn-primary-custom" style="margin-top:14px;" onclick="saveProfile()"> Save
+                        Profile</button>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">🎨 Appearance</div>
+                    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">Switch between dark and light
+                        interface theme.</p>
+                    <button class="btn-ghost" onclick="toggleTheme()">Toggle Dark / Light Mode</button>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">⚠ Danger Zone</div>
+                    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">This will permanently delete all
+                        your recorded expenses.</p>
+                    <button class="btn-danger-custom" onclick="resetApp()">Clear All Expenses</button>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">💰 Monthly Budget</div>
+                    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;"> Monthly budget set karo — exceed
+                        hone pe alert aayega.</p>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <input type="number" id="budgetInput" placeholder="e.g. 10000" style="max-width:200px;" min="0">
+                        <button class="btn-primary-custom" onclick="saveBudget()">Save Budget</button>
                     </div>
+                    <div id="budgetStatus" style="margin-top:10px;font-size:13px;color:var(--text2);"></div>
                 </div>
-                <button class="btn-primary-custom" style="margin-top:14px;" onclick="saveProfile()">Save
-                    Profile</button>
-            </div>
-            <div class="settings-section">
-                <div class="settings-title">🎨 Appearance</div>
-                <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">Switch between dark and light
-                    interface theme.</p>
-                <button class="btn-ghost" onclick="toggleTheme()">Toggle Dark / Light Mode</button>
-            </div>
-            <div class="settings-section">
-                <div class="settings-title">⚠ Danger Zone</div>
-                <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">This will permanently delete
-                    all your recorded expenses.</p>
-                <button class="btn-danger-custom" onclick="resetApp()">Clear All Expenses</button>
-            </div>
-            <div class="settings-section">
-                <div class="settings-title">💰 Monthly Budget</div>
-                <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">
-                    Monthly budget set karo — exceed hone pe alert aayega.
-                </p>
-                <div style="display:flex;gap:10px;align-items:center;">
-                    <input type="number" id="budgetInput" placeholder="e.g. 10000" style="max-width:200px;" min="0">
-                    <button class="btn-primary-custom" onclick="saveBudget()">Save Budget</button>
-                </div>
-                <div id="budgetStatus" style="margin-top:10px;font-size:13px;color:var(--text2);"></div>
             </div>
         </div>
     </div>
