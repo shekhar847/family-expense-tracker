@@ -62,6 +62,38 @@ app.get("/test-db", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
+// -------------------Upload Profile Image-------------------
+app.post("/upload-avatar", upload.single("avatar"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file uploaded" });
+        }
+
+        // Cloudinary pe upload karo
+        const result = await new Promise((resolve, reject) => {
+            cloudinary.uploader.upload_stream(
+                { folder: "expense-tracker-avatars", transformation: [{ width: 150, height: 150, crop: "fill" }] },
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }
+            ).end(req.file.buffer);
+        });
+
+        // Database mein URL save karo
+        const { user_id } = req.body;
+        await pool.query(
+            "UPDATE public.users SET avatar = $1 WHERE id = $2",
+            [result.secure_url, user_id]
+        );
+
+        res.json({ avatar_url: result.secure_url });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // -------------------Register------------------------
 app.post("/register", async (req, res) => {
   try {
