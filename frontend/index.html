@@ -384,22 +384,21 @@
                     <span class="footer-logo-name">ExpenseIQ</span>
                 </div>
                 <div class="footer-tagline">Manage your daily expenses, smartly.</div>
-                <div class="footer-badges">
-                    <div class="footer-badges" id="footerBadges" style="display:none;">
-                        <span class="footer-badge" title="Current Version">⚡ v2.0</span>
-                        <button class="footer-badge" onclick="toggleTheme()">🌙 Dark Mode</button>
-                        <button class="footer-badge" onclick="downloadReport()">↓ PDF Export</button>
-                        <button class="footer-badge"
-                            onclick="showSection('reportSection', document.querySelector('[onclick*=reportSection]'))">◎
-                            Charts</button>
-                    </div>
-                    <div class="footer-right">
-                        <div class="footer-dev">Crafted with ♥ by <span>Mr. Shekhar Kumar</span></div>
-                        <div class="footer-copy">© 2026 ExpenseIQ · All rights reserved</div>
-                    </div>
+                <div id="footerBadges" style="display:none;">
+                    <span class="footer-badge" title="Current Version">⚡ v2.0</span>
+                    <button class="footer-badge" onclick="toggleTheme()">🌙 Dark Mode</button>
+                    <button class="footer-badge" onclick="downloadReport()">↓ PDF Export</button>
+                    <button class="footer-badge"
+                        onclick="showSection('reportSection', document.querySelector('[onclick*=reportSection]'))">◎
+                        Charts</button>
                 </div>
+            </div>
+            <div class="footer-right">
+                <div class="footer-dev">Crafted with ♥ by <span>Mr. Shekhar Kumar</span></div>
+                <div class="footer-copy">© 2026 ExpenseIQ · All rights reserved</div>
+            </div>
+        </div>
     </footer>
-    </div>
 
     <!-- ----------------------------------Toast Stack----------------------- -->
     <div class="toast-stack" id="toastStack"></div>
