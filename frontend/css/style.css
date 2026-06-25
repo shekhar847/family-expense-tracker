@@ -1049,6 +1049,54 @@ body.light {
     }
 }
 
+@media (max-width: 768px) {
+    .hamburger {
+        display: block !important;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        transition: left 0.3s ease;
+        z-index: 999;
+    }
+
+    .sidebar.open {
+        left: 0;
+    }
+
+    .main {
+        margin-left: 0 !important;
+    }
+
+    /* Responsive Table */
+    .report-table thead {
+        display: none;
+    }
+
+    .report-table tr {
+        display: block;
+        margin-bottom: 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    .report-table td {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 4px;
+        border: none;
+        font-size: 13px;
+    }
+
+    .report-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text2);
+    }
+}
+
 @media (max-width: 600px) {
     .stat-grid {
         grid-template-columns: 1fr;

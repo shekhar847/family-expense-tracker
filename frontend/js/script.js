@@ -488,13 +488,13 @@ function renderReportTable(data) {
     }
     tbody.innerHTML = data.map((e, i) => `
         <tr>
-            <td>${i + 1}</td>
-            <td>${e.title}</td>
-            <td>${e.category}</td>
-            <td style="text-align:right;">
+            <td data-label="#">${i + 1}</td>
+            <td data-label="Title">${e.title}</td>
+            <td data-label="Category">${e.category}</td>
+            <td data-label="Amount" style="text-align:right;">
                 ₹${Number(e.amount).toFixed(2)}
             </td>
-            <td>
+            <td data-label="Date">
                 ${e.date ? new Date(e.date).toLocaleDateString("en-IN") : "-"}
             </td>
         </tr>
