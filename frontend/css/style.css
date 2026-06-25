@@ -853,7 +853,6 @@ footer::after {
 }
 
 .footer-badges {
-    display: flex;
     gap: 8px;
     margin-top: 10px;
 }
