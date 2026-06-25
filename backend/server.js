@@ -13,6 +13,18 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
+
+cloudinary.config({
+    cloud_name: "dsa7qrchz",
+    api_key: "674292933575328",
+    api_secret: "SYeGO96IWZZfWE9r_u4Rs-abl5o"
+});
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
 const pool = require("./db");
 // -------------------Create Table-----------------------
 pool.query(`
@@ -106,7 +118,7 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-// -------------------Add Expenses------------------------
+// -------------------Add Expenses---------------------
 app.post("/add-expense", async (req, res) => {
   try {
     console.log("ADD EXPENSE BODY:", req.body);
