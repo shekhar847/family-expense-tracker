@@ -662,3 +662,34 @@ function checkBudget() {
     // Budget input mein saved value dikhao
     document.getElementById("budgetInput").value = budget;
 }
+
+async function uploadAvatar() {
+    const file = document.getElementById("avatarInput").files[0];
+    if (!file) return;
+    const status = document.getElementById("avatarStatus");
+    status.innerText = "Uploading...";
+    const formData = new FormData();
+    formData.append("avatar", file);
+    formData.append("user_id", currentUser.id);
+    try {
+        const res = await fetch(`${BASE_URL}/upload-avatar`, { method: "POST", body: formData });
+        const data = await res.json();
+        if (data.avatar_url) {
+            const avatarEl = document.getElementById("userAvatar");
+            avatarEl.innerHTML = `<img src="${data.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            const preview = document.getElementById("avatarPreview");
+            preview.src = data.avatar_url;
+            preview.style.display = "block";
+            currentUser.avatar = data.avatar_url;
+            status.innerText = "✓ Photo updated!";
+            showToast("Profile photo updated!");
+        } else {
+            status.innerText = "Upload failed";
+            showToast("Upload failed", "danger");
+        }
+    } catch (err) {
+        console.log(err);
+        status.innerText = "Error uploading";
+        showToast("Error uploading", "danger");
+    }
+}

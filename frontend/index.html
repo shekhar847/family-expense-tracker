@@ -333,6 +333,22 @@
             <!-- --------------------------Setting--------------------------- -->
             <div id="settingSection" class="section">
                 <div class="settings-section">
+                    <div class="settings-title">🖼 Profile Picture</div>
+                    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">Apni profile photo upload karo.</p>
+                    <div style="display:flex;align-items:center;gap:16px;">
+                        <img id="avatarPreview" src=""
+                            style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--border);display:none;">
+                        <div>
+                            <input type="file" id="avatarInput" accept="image/*" style="display:none;"
+                                onchange="uploadAvatar()">
+                            <button class="btn-primary-custom" onclick="document.getElementById('avatarInput').click()">
+                                📷 Upload Photo
+                            </button>
+                        </div>
+                    </div>
+                    <div id="avatarStatus" style="margin-top:10px;font-size:13px;color:var(--text2);"></div>
+                </div>
+                <div class="settings-section">
                     <div class="settings-title">👤 Profile</div>
                     <div class="two-col" style="gap:12px;">
                         <div>
