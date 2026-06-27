@@ -17,12 +17,9 @@ function toggleSidebar() {
 }
 // ---------------------------Section---------------------------
 function showSection(id, el = null) {
-    document.querySelectorAll(".section")
-        .forEach(sec => sec.classList.remove("active"));
-    document.getElementById(id)
-        .classList.add("active");
-    document.querySelectorAll(".nav-item")
-        .forEach(nav => nav.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    document.querySelectorAll(".nav-item").forEach(nav => nav.classList.remove("active"));
     if (el) {
         el.classList.add("active");
     }
@@ -38,22 +35,17 @@ function showSection(id, el = null) {
     }
     localStorage.setItem("activeSection", id);
 }
-
 // ---------------------------Toast-----------------------------
 function showToast(msg, type = "success") {
     const stack = document.getElementById("toastStack");
     const el = document.createElement("div");
     el.className = "toast-item";
-    el.innerHTML = `
-        <div class="toast-dot ${type === "danger" ? "danger" : ""}"></div>
-        <span>${msg}</span>
-    `;
+    el.innerHTML = `<div class="toast-dot ${type === "danger" ? "danger" : ""}"></div> <span>${msg}</span> `;
     stack.appendChild(el);
     setTimeout(() => {
         el.remove();
     }, 3000);
 }
-
 // ---------------------------Login-----------------------------
 async function loginUser() {
     try {
@@ -90,7 +82,6 @@ async function loginUser() {
             showToast("Login Successful");
             loadExpenses();
         } else {
-            // Login fail hone pe wapas login card dikhao
             document.getElementById("loginCard").style.display = "block";
             showToast(data.message || "Invalid Credentials", "danger");
         }
@@ -101,7 +92,7 @@ async function loginUser() {
         showToast("Server Error", "danger");
     }
 }
-
+// ---------------------------Register--------------------------
 async function registerUser() {
     try {
         const name = document.getElementById("regName").value.trim();
@@ -127,7 +118,7 @@ async function registerUser() {
         showToast("Server Error", "danger");
     }
 }
-
+// ---------------------------RegisterForm----------------------
 function showRegisterForm() {
     const nameGroup = document.getElementById("nameGroup");
     if (nameGroup.style.display === "none") {
@@ -136,22 +127,20 @@ function showRegisterForm() {
         registerUser();
     }
 }
-
 // ---------------------------Logout----------------------------
 function logout() {
     currentUser = null;
-    localStorage.removeItem("currentUser"); // YE ADD HUA
+    localStorage.removeItem("currentUser");
     document.getElementById("userName").innerText = "Guest User";
     document.getElementById("userEmail").innerText = "Not logged in";
     document.getElementById("userAvatar").innerText = "?";
     document.getElementById("dashboardContent").style.display = "none";
-    document.getElementById("landingPage").style.display = "block"; // Landing page wapas dikhao
+    document.getElementById("landingPage").style.display = "block";
     document.getElementById("loginCard").style.display = "none";
     document.getElementById("sidebarUser").style.display = "none";
     document.getElementById("footerBadges").style.display = "none";
     showToast("Logged out", "danger");
 }
-
 // ---------------------------Add Expense-----------------------
 async function addExpense() {
     if (!currentUser) {
@@ -160,7 +149,6 @@ async function addExpense() {
     }
     const title = document.getElementById("title").value.trim();
     const amount = document.getElementById("amount").value.trim();
-    
     let category = document.getElementById("category").value;
     if (category === "__custom__") {
         category = document.getElementById("customCategory").value.trim();
@@ -169,12 +157,10 @@ async function addExpense() {
             return;
         }
     }
-
     if (!title || !amount || !category) {
         showToast("Fill all fields", "danger");
         return;
     }
-    // Amount validation
     if (Number(amount) <= 0) {
         showToast("Amount 0 se zyada hona chahiye", "danger");
         return;
@@ -186,9 +172,7 @@ async function addExpense() {
     try {
         await fetch(`${BASE_URL}/add-expense`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
                 user_id: currentUser.id,
                 title,
@@ -208,7 +192,6 @@ async function addExpense() {
         showToast("Failed", "danger");
     }
 }
-
 // ---------------------------Load Expense----------------------
 async function loadExpenses() {
     try {
@@ -228,7 +211,6 @@ async function loadExpenses() {
         console.log(err);
     }
 }
-
 // ---------------------------Expense List----------------------
 function renderExpenseList(data) {
     const container =
@@ -264,11 +246,10 @@ function renderExpenseList(data) {
         </div>
     `).join("");
 }
-
+// ---------------------------RecentExpense---------------------
 function renderRecentExpenses(data) {
     const container = document.getElementById("recentExpenses");
     if (!container) return;
-
     if (data.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
@@ -278,7 +259,6 @@ function renderRecentExpenses(data) {
         `;
         return;
     }
-
     const recent = data.slice(0, 5);
     container.innerHTML = recent.map(e => `
         <div class="expense-item">
@@ -291,37 +271,27 @@ function renderRecentExpenses(data) {
         </div>
     `).join("");
 }
-
 // ---------------------------Delete----------------------------
 async function deleteExpense(id) {
     if (!confirm("Are you sure you want to delete this expense?")) return;
     try {
-        await fetch(
-            `${BASE_URL}/delete-expense/${id}`,
-            {
-                method: "DELETE"
-            }
-        );
+        await fetch( `${BASE_URL}/delete-expense/${id}`, {method: "DELETE"});
         showToast("Expense Deleted", "danger");
         loadExpenses();
     } catch (err) {
         console.log(err);
     }
 }
-
+// ---------------------------Edit------------------------------
 async function editExpense(id, title, amount, category) {
-    // Simple prompt se edit karo
     const newTitle = prompt("Title:", title);
     if (newTitle === null) return;
-
     const newAmount = prompt("Amount:", amount);
     if (newAmount === null) return;
-
     if (!newTitle || !newAmount || Number(newAmount) <= 0) {
         showToast("Valid data daalo", "danger");
         return;
     }
-
     try {
         const res = await fetch(`${BASE_URL}/edit-expense/${id}`, {
             method: "PUT",
@@ -342,7 +312,7 @@ async function editExpense(id, title, amount, category) {
         showToast("Error updating", "danger");
     }
 }
-// ---------------------------Filter Expenses-------------------
+// ---------------------------FilterExpenses--------------------
 function filterExpenses() {
     const q = document
         .getElementById("searchExpense")
@@ -357,24 +327,18 @@ function filterExpenses() {
                 : "none";
     });
 }
-
+// ---------------------------FilterByMOnth---------------------
 function filterByMonth() {
     const filter = document.getElementById("filterMonth").value;
     const items = document.querySelectorAll(".expense-item");
-
-    // Pehle sab show karo
     items.forEach(item => item.style.display = "");
-
     if (filter === "all") return;
-
     const now = new Date();
     items.forEach(item => {
         const dateText = item.querySelector(".expense-date")?.innerText?.trim();
         if (!dateText) return;
-
         const parts = dateText.split("/");
         const itemDate = new Date(parts[2], parts[1] - 1, parts[0]);
-
         if (filter === "this") {
             item.style.display = (
                 itemDate.getMonth() === now.getMonth() &&
@@ -390,12 +354,11 @@ function filterByMonth() {
         }
     });
 }
-
+// ---------------------------FilterReport----------------------
 function filterReport() {
     const filter = document.getElementById("reportFilter").value;
     const rows = document.querySelectorAll("#reportTableBody tr");
     const now = new Date();
-
     rows.forEach(row => {
         if (filter === "all") {
             row.style.display = "";
@@ -403,10 +366,8 @@ function filterReport() {
         }
         const dateText = row.querySelectorAll("td")[4]?.innerText?.trim();
         if (!dateText) return;
-
         const parts = dateText.split("/");
         const rowDate = new Date(parts[2], parts[1] - 1, parts[0]);
-
         if (filter === "this") {
             row.style.display = (
                 rowDate.getMonth() === now.getMonth() &&
@@ -422,30 +383,24 @@ function filterReport() {
         }
     });
 }
-
 // ---------------------------State-----------------------------
 function updateStats(data) {
     let total = 0;
     data.forEach(e => {
         total += Number(e.amount);
     });
-    const avg =
-        data.length > 0
-            ? total / data.length
-            : 0;
+    const avg = data.length > 0 ? total / data.length : 0;
     document.getElementById("statTotal").innerText = total.toFixed(2);
     document.getElementById("statMonth").innerText = total.toFixed(2);
     document.getElementById("statCount").innerText = data.length;
     document.getElementById("statAvg").innerText = avg.toFixed(2);
 }
-
 // ---------------------------Chart-----------------------------
 function renderCharts(data) {
     const cats = {};
     data.forEach(e => {
         const cat = e.category || "Other";
-        cats[cat] =
-            (cats[cat] || 0) + Number(e.amount);
+        cats[cat] = (cats[cat] || 0) + Number(e.amount);
     });
     const labels = Object.keys(cats);
     const values = Object.values(cats);
@@ -520,7 +475,6 @@ function renderCharts(data) {
         });
     }
 }
-
 // ---------------------------Report Table----------------------
 function renderReportTable(data) {
     const tbody = document.getElementById("reportTableBody");
@@ -547,8 +501,7 @@ function renderReportTable(data) {
         </tr>
     `).join("");
 }
-
-// ---------------------------Save Profile ---------------------
+// ---------------------------Save Profile----------------------
 async function saveProfile() {
     const name = document.getElementById("profileName").value.trim();
     const email = document.getElementById("profileEmail").value.trim();
@@ -582,13 +535,12 @@ async function saveProfile() {
         showToast("Error saving profile", "danger");
     }
 }
-
+// ---------------------------changePassword--------------------
 async function changePassword() {
     const oldPassword = document.getElementById("oldPassword").value.trim();
     const newPassword = document.getElementById("newPassword").value.trim();
     const confirmPassword = document.getElementById("confirmPassword").value.trim();
     const status = document.getElementById("passwordStatus");
-
     if (!oldPassword || !newPassword || !confirmPassword) {
         showToast("Sab fields bharo", "danger");
         return;
@@ -601,7 +553,6 @@ async function changePassword() {
         showToast("Password kam se kam 6 characters ka hona chahiye", "danger");
         return;
     }
-
     try {
         const res = await fetch(`${BASE_URL}/change-password`, {
             method: "PUT",
@@ -627,24 +578,21 @@ async function changePassword() {
         showToast("Error changing password", "danger");
     }
 }
-// ---------------------------Toggle Theme ---------------------
+// ---------------------------Toggle Theme----------------------
 function toggleTheme() {
     document.body.classList.toggle('light');
     const isDark = !document.body.classList.contains('light');
     const btn = document.querySelector('.theme-toggle');
     if (btn) btn.textContent = isDark ? '☀' : '🌙';
 }
-
-// ---------------------------Reset App ------------------------
+// ---------------------------Reset App-------------------------
 async function resetApp() {
     if (!currentUser) { showToast("Login first", "danger"); return; }
     if (!confirm("Delete ALL expenses from database? This cannot be undone.")) return;
     try {
         const res = await fetch(`${BASE_URL}/expenses`);
         const data = await res.json();
-        await Promise.all(
-            data.map(e => fetch(`${BASE_URL}/delete-expense/${e.id}`, { method: "DELETE" }))
-        );
+        await Promise.all(data.map(e => fetch(`${BASE_URL}/delete-expense/${e.id}`, { method: "DELETE" })));
         loadExpenses();
         showToast("All expenses cleared", "danger");
     } catch (err) {
@@ -652,7 +600,6 @@ async function resetApp() {
         showToast("Error clearing expenses", "danger");
     }
 }
-
 // ---------------------------PDF Download----------------------
 function downloadReport() {
     try {
@@ -685,7 +632,6 @@ function downloadReport() {
         rows.forEach((row) => {
             // Sirf visible rows include karo
             if (row.style.display === "none") return;
-
             const cols = row.querySelectorAll("td");
             if (cols.length < 4) return;
             const title = cols[1].innerText;
@@ -722,7 +668,7 @@ function downloadReport() {
         showToast("PDF Error", "danger");
     }
 }
-
+// ---------------------------saveBudget------------------------
 function saveBudget() {
     const budget = Number(document.getElementById("budgetInput").value);
     if (!budget || budget <= 0) {
@@ -733,26 +679,22 @@ function saveBudget() {
     showToast("Budget saved!");
     checkBudget();
 }
-
+// ---------------------------CheckBudget-----------------------
 function checkBudget() {
     const budget = Number(localStorage.getItem("monthlyBudget"));
     if (!budget) return;
-
     const total = Number(document.getElementById("statMonth").innerText);
     const status = document.getElementById("budgetStatus");
     const remaining = budget - total;
-
     if (remaining < 0) {
         status.innerHTML = `<span style="color:var(--red);">⚠ Budget exceed ho gaya! ₹${Math.abs(remaining).toFixed(2)} zyada kharch kiya</span>`;
         showToast(`⚠ Budget exceed! ₹${Math.abs(remaining).toFixed(2)} zyada`, "danger");
     } else {
         status.innerHTML = `<span style="color:#3dd9a4;">✓ ₹${remaining.toFixed(2)} remaining this month</span>`;
     }
-
-    // Budget input mein saved value dikhao
     document.getElementById("budgetInput").value = budget;
 }
-
+// ---------------------------UploadAvtar-----------------------
 async function uploadAvatar() {
     const file = document.getElementById("avatarInput").files[0];
     if (!file) return;
@@ -783,8 +725,7 @@ async function uploadAvatar() {
         showToast("Error uploading", "danger");
     }
 }
-
-// Page load pe check karo
+// ---------------------------Page load pe check karo-----------
 window.addEventListener("load", () => {
     const saved = localStorage.getItem("currentUser");
     if (saved) {
@@ -812,8 +753,7 @@ window.addEventListener("load", () => {
         }
     }
 });
-
-// Custom Category Toggle
+// ---------------------------Custom Category Toggle------------
 document.getElementById("category").addEventListener("change", function () {
     const customGroup = document.getElementById("customCategoryGroup");
     if (this.value === "__custom__") {
