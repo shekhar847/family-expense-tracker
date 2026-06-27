@@ -37,6 +37,7 @@ body {
     display: flex;
     min-height: 100vh;
     font-size: 14px;
+    overflow-x: hidden;
 }
 
 /* -------------------Sidebar--------------------- */
