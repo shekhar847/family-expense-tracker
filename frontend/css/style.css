@@ -273,6 +273,82 @@ body {
     }
 }
 
+@media (max-width: 768px) {
+    .hamburger {
+        display: block !important;
+    }
+
+    .sidebar {
+        left: -260px !important;
+        width: 240px !important;
+        position: fixed !important;
+        transition: left 0.3s ease;
+        z-index: 999;
+    }
+
+    .sidebar.open {
+        left: 0 !important;
+    }
+
+    .main {
+        margin-left: 0 !important;
+    }
+
+    .report-table thead {
+        display: none;
+    }
+
+    .report-table tr {
+        display: block;
+        margin-bottom: 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    .report-table td {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 4px;
+        border: none;
+        font-size: 13px;
+    }
+
+    .report-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text2);
+    }
+}
+
+@media (max-width: 600px) {
+    .stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .content-area {
+        padding: 16px;
+    }
+
+    .topbar {
+        padding: 0 16px;
+    }
+
+    footer {
+        padding: 20px;
+    }
+
+    .footer-inner {
+        flex-direction: column;
+        gap: 18px;
+        align-items: flex-start;
+    }
+
+    .footer-right {
+        text-align: left;
+    }
+}
+
 /* -------------------State Card--------------------- */
 .stat-grid {
     display: grid;
