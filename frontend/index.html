@@ -364,6 +364,28 @@
                         Profile</button>
                 </div>
                 <div class="settings-section">
+                    <div class="settings-title">🔒 Change Password</div>
+                    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">Apna password change karo.</p>
+                    <div style="display:flex;flex-direction:column;gap:10px;max-width:400px;">
+                        <div>
+                            <label class="form-label">Old Password</label>
+                            <input type="password" id="oldPassword" placeholder="Current password">
+                        </div>
+                        <div>
+                            <label class="form-label">New Password</label>
+                            <input type="password" id="newPassword" placeholder="New password">
+                        </div>
+                        <div>
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                        </div>
+                        <button class="btn-primary-custom" style="margin-top:4px;" onclick="changePassword()">
+                            Change Password
+                        </button>
+                    </div>
+                    <div id="passwordStatus" style="margin-top:10px;font-size:13px;color:var(--text2);"></div>
+                </div>
+                <div class="settings-section">
                     <div class="settings-title">🎨 Appearance</div>
                     <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">Switch between dark and light
                         interface theme.</p>

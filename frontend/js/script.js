@@ -543,6 +543,50 @@ async function saveProfile() {
     }
 }
 
+async function changePassword() {
+    const oldPassword = document.getElementById("oldPassword").value.trim();
+    const newPassword = document.getElementById("newPassword").value.trim();
+    const confirmPassword = document.getElementById("confirmPassword").value.trim();
+    const status = document.getElementById("passwordStatus");
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+        showToast("Sab fields bharo", "danger");
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        showToast("New password match nahi kar raha", "danger");
+        return;
+    }
+    if (newPassword.length < 6) {
+        showToast("Password kam se kam 6 characters ka hona chahiye", "danger");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${BASE_URL}/change-password`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                old_password: oldPassword,
+                new_password: newPassword
+            })
+        });
+        const data = await res.json();
+        if (data.message === "Password changed successfully") {
+            showToast("Password change ho gaya! ✓");
+            document.getElementById("oldPassword").value = "";
+            document.getElementById("newPassword").value = "";
+            document.getElementById("confirmPassword").value = "";
+            status.innerText = "✓ Password updated!";
+        } else {
+            showToast(data.message || "Error", "danger");
+        }
+    } catch (err) {
+        console.log(err);
+        showToast("Error changing password", "danger");
+    }
+}
 // ---------------------------Toggle Theme ---------------------
 function toggleTheme() {
     document.body.classList.toggle('light');
@@ -551,7 +595,7 @@ function toggleTheme() {
     if (btn) btn.textContent = isDark ? '☀' : '🌙';
 }
 
-// --------------------------- Reset App ------------------------
+// ---------------------------Reset App ------------------------
 async function resetApp() {
     if (!currentUser) { showToast("Login first", "danger"); return; }
     if (!confirm("Delete ALL expenses from database? This cannot be undone.")) return;
