@@ -121,7 +121,7 @@ async function registerUser() {
             showToast("Registered! Ab login karo");
             document.getElementById("nameGroup").style.display = "none";
         } else {
-            showToast(data.error || "Error", "danger");
+            showToast(data.message || data.error || "Error", "danger");
         }
     } catch (err) {
         showToast("Server Error", "danger");
