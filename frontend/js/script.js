@@ -32,6 +32,10 @@ function showSection(id, el = null) {
             loadExpenses();
         }, 300);
     }
+    if (id === "settingSection" && currentUser) {
+        document.getElementById("profileName").value = currentUser.name || "";
+        document.getElementById("profileEmail").value = currentUser.email || "";
+    }
 }
 
 // ---------------------------Toast-----------------------------
@@ -58,7 +62,7 @@ async function loginUser() {
         document.getElementById("loadingSpinner").style.display = "block";
         const res = await fetch(`${BASE_URL}/login`, {
             method: "POST",
-            headers: { "Content-Type": "application/json"},
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 email,
                 password
@@ -501,24 +505,37 @@ function renderReportTable(data) {
 }
 
 // ---------------------------Save Profile ---------------------
-function saveProfile() {
+async function saveProfile() {
     const name = document.getElementById("profileName").value.trim();
     const email = document.getElementById("profileEmail").value.trim();
     if (!name || !email) {
         showToast("Please fill both fields", "danger");
         return;
     }
-    if (currentUser) {
-        currentUser.name = name;
-        currentUser.email = email;
-        document.getElementById("userName").innerText = name;
-        document.getElementById("userEmail").innerText = email;
-        if (!currentUser.avatar) {
-            document.getElementById("userAvatar").innerText = name.charAt(0).toUpperCase();
-        }
-        showToast("Profile saved ✓");
-    } else {
+    if (!currentUser) {
         showToast("Login first", "danger");
+        return;
+    }
+    try {
+        const res = await fetch(`${BASE_URL}/update-profile`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: currentUser.id, name, email })
+        });
+        const data = await res.json();
+        if (data.user) {
+            currentUser.name = name;
+            currentUser.email = email;
+            document.getElementById("userName").innerText = name;
+            document.getElementById("userEmail").innerText = email;
+            if (!currentUser.avatar) {
+                document.getElementById("userAvatar").innerText = name.charAt(0).toUpperCase();
+            }
+            showToast("Profile saved ✓");
+        }
+    } catch (err) {
+        console.log(err);
+        showToast("Error saving profile", "danger");
     }
 }
 
