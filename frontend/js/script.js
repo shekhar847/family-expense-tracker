@@ -671,39 +671,26 @@ function downloadReport() {
         // -------------------Table Row-------------------------
         const rows = document.querySelectorAll("#reportTableBody tr");
         let total = 0;
+        let index = 0;
         doc.setFont("helvetica", "normal");
-        rows.forEach((row, index) => {
+        rows.forEach((row) => {
+            // Sirf visible rows include karo
+            if (row.style.display === "none") return;
+
             const cols = row.querySelectorAll("td");
             if (cols.length < 4) return;
-            const title =
-                cols[1].innerText;
-            const category =
-                cols[2].innerText;
-            const amountText =
-                cols[3].innerText;
+            const title = cols[1].innerText;
+            const category = cols[2].innerText;
+            const amountText = cols[3].innerText;
             // -------------------Clean Number------------------
-            const amount =
-                parseFloat(
-                    amountText.replace(/[^\d.]/g, "")
-                ) || 0;
+            const amount = parseFloat(amountText.replace(/[^\d.]/g, "")) || 0;
             total += amount;
-            /// -------------------Print Row--------------------
-            doc.text(String(index + 1), 20, y);
-            doc.text(
-                title.substring(0, 25),
-                35,
-                y
-            );
-            doc.text(
-                category.substring(0, 15),
-                100,
-                y
-            );
-            doc.text(
-                `Rs. ${amount.toFixed(2)}`,
-                150,
-                y
-            );
+            index++;
+            // -------------------Print Row--------------------
+            doc.text(String(index), 20, y);
+            doc.text(title.substring(0, 25), 35, y);
+            doc.text(category.substring(0, 15), 100, y);
+            doc.text(`Rs. ${amount.toFixed(2)}`, 150, y);
             y += 10;
             // -------------------New Page-----------------------
             if (y > 270) {
@@ -717,10 +704,7 @@ function downloadReport() {
         y += 12;
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
-        doc.text(
-            `Total Expense: Rs. ${total.toFixed(2)}`,
-            20, y
-        );
+        doc.text(`Total Expense: Rs. ${total.toFixed(2)}`, 20, y);
         // -------------------Save-------------------------------
         doc.save("Expense_Report.pdf");
         showToast("PDF Downloaded");
