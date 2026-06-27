@@ -36,6 +36,7 @@ function showSection(id, el = null) {
         document.getElementById("profileName").value = currentUser.name || "";
         document.getElementById("profileEmail").value = currentUser.email || "";
     }
+    localStorage.setItem("activeSection", id);
 }
 
 // ---------------------------Toast-----------------------------
@@ -736,5 +737,10 @@ window.addEventListener("load", () => {
         document.getElementById("sidebarUser").style.display = "block";
         document.getElementById("footerBadges").style.display = "flex";
         loadExpenses();
+        const activeSection = localStorage.getItem("activeSection");
+        if (activeSection) {
+            const navEl = document.querySelector(`[onclick*="${activeSection}"]`);
+            showSection(activeSection, navEl);
+        }
     }
 });
