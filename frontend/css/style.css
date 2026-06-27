@@ -280,9 +280,9 @@ body {
     }
 
     .sidebar {
+        position: fixed !important;
         left: -260px !important;
         width: 240px !important;
-        position: fixed !important;
         transition: left 0.3s ease;
         z-index: 999;
     }
@@ -293,6 +293,12 @@ body {
 
     .main {
         margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .content-area {
+        width: 100% !important;
+        overflow-x: hidden;
     }
 
     .report-table thead {
@@ -321,7 +327,6 @@ body {
         color: var(--text2);
     }
 }
-
 @media (max-width: 600px) {
     .stat-grid {
         grid-template-columns: 1fr;
