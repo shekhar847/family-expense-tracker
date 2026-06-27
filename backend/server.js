@@ -123,14 +123,14 @@ app.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
     res.json({
-    message: "Login successful",
-    user: {
+      message: "Login successful",
+      user: {
         id: user.id,
         name: user.name,
         email: user.email,
         avatar: user.avatar
-    }
-});
+      }
+    });
   } catch (err) {
     console.log("LOGIN ERROR:", err);
     res.status(500).json({ error: err.message });
@@ -193,20 +193,50 @@ app.delete("/delete-expense/:id", async (req, res) => {
 
 // -------------------Update Profile-------------------
 app.put("/update-profile", async (req, res) => {
-    try {
-        const { user_id, name, email } = req.body;
-        if (!user_id || !name || !email) {
-            return res.status(400).json({ message: "All fields required" });
-        }
-        const result = await pool.query(
-            "UPDATE public.users SET name = $1, email = $2 WHERE id = $3 RETURNING *",
-            [name, email.trim().toLowerCase(), user_id]
-        );
-        res.json({ message: "Profile updated", user: result.rows[0] });
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: err.message });
+  try {
+    const { user_id, name, email } = req.body;
+    if (!user_id || !name || !email) {
+      return res.status(400).json({ message: "All fields required" });
     }
+    const result = await pool.query(
+      "UPDATE public.users SET name = $1, email = $2 WHERE id = $3 RETURNING *",
+      [name, email.trim().toLowerCase(), user_id]
+    );
+    res.json({ message: "Profile updated", user: result.rows[0] });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// -------------------Change Password-------------------
+app.put("/change-password", async (req, res) => {
+  try {
+    const { user_id, old_password, new_password } = req.body;
+    if (!user_id || !old_password || !new_password) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+    const userResult = await pool.query(
+      "SELECT * FROM public.users WHERE id = $1", [user_id]
+    );
+    if (userResult.rows.length === 0) {
+      return res.status(400).json({ message: "User not found" });
+    }
+    const user = userResult.rows[0];
+    const isMatch = await bcrypt.compare(old_password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Old password galat hai" });
+    }
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+    await pool.query(
+      "UPDATE public.users SET password = $1 WHERE id = $2",
+      [hashedPassword, user_id]
+    );
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 // -------------------Start Server--------------------
 app.listen(5000, () => {
