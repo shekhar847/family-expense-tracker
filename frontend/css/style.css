@@ -271,42 +271,6 @@ body {
     .expense-input-row {
         grid-template-columns: 1fr;
     }
-
-    /* Landing page fix */
-    .login-wrapper {
-        padding: 10px;
-    }
-
-    .login-wrapper .card-panel {
-        padding: 20px 16px !important;
-    }
-
-    /* Responsive Table */
-    .report-table thead {
-        display: none;
-    }
-
-    .report-table tr {
-        display: block;
-        margin-bottom: 12px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 10px;
-    }
-
-    .report-table td {
-        display: flex;
-        justify-content: space-between;
-        padding: 6px 4px;
-        border: none;
-        font-size: 13px;
-    }
-
-    .report-table td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: var(--text2);
-    }
 }
 
 /* -------------------State Card--------------------- */
