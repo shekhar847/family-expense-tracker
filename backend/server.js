@@ -190,6 +190,24 @@ app.delete("/delete-expense/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// -------------------Update Profile-------------------
+app.put("/update-profile", async (req, res) => {
+    try {
+        const { user_id, name, email } = req.body;
+        if (!user_id || !name || !email) {
+            return res.status(400).json({ message: "All fields required" });
+        }
+        const result = await pool.query(
+            "UPDATE public.users SET name = $1, email = $2 WHERE id = $3 RETURNING *",
+            [name, email.trim().toLowerCase(), user_id]
+        );
+        res.json({ message: "Profile updated", user: result.rows[0] });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: err.message });
+    }
+});
 // -------------------Start Server--------------------
 app.listen(5000, () => {
   console.log("Server started on port 5000");
