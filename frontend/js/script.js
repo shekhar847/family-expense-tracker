@@ -514,7 +514,9 @@ function saveProfile() {
         currentUser.email = email;
         document.getElementById("userName").innerText = name;
         document.getElementById("userEmail").innerText = email;
-        document.getElementById("userAvatar").innerText = name.charAt(0).toUpperCase();
+        if (!currentUser.avatar) {
+            document.getElementById("userAvatar").innerText = name.charAt(0).toUpperCase();
+        }
         showToast("Profile saved ✓");
     } else {
         showToast("Login first", "danger");
