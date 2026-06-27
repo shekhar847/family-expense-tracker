@@ -250,10 +250,8 @@ function renderExpenseList(data) {
             <span class="expense-amount">
                 ₹${Number(e.amount).toFixed(2)}
             </span>
-            <button class="btn-del"
-                onclick="deleteExpense(${e.id})">
-                ✕
-            </button>
+            <button class="btn-edit" onclick="editExpense(${e.id}, '${e.title}', ${e.amount}, '${e.category}')">✎</button>
+            <button class="btn-del" onclick="deleteExpense(${e.id})">🗑</button>
         </div>
     `).join("");
 }

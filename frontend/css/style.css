@@ -506,8 +506,13 @@ select option {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* -------------------Login Section----------------- */
@@ -555,6 +560,22 @@ select option {
     border-radius: var(--radius-sm);
     transition: background 0.15s;
     animation: slideIn 0.2s ease;
+}
+
+.btn-edit {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+}
+
+.btn-edit:hover {
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 @keyframes slideIn {
