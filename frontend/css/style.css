@@ -588,6 +588,7 @@ select option {
 .login-wrapper {
     max-width: 400px;
     margin: 0 auto;
+    width: 100%;
 }
 
 .login-header {
@@ -1126,16 +1127,6 @@ body.light {
 
     .expense-input-row {
         grid-template-columns: 1fr;
-    }
-
-    .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-    }
-
-    .main {
-        margin-left: 0;
     }
 }
 
