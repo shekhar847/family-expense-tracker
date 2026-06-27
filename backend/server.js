@@ -97,8 +97,16 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ message: "All fields required" });
     }
     const cleanEmail = email.trim().toLowerCase();
+    //---------------Email already exists check-------
+    const existing = await pool.query("SELECT * FROM public.users WHERE email = $1", [cleanEmail]);
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ message: "Email already registered! Please login." });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await pool.query("INSERT INTO public.users (name, email, password) VALUES ($1, $2, $3) RETURNING *", [name, cleanEmail, hashedPassword]);
+    const result = await pool.query(
+      "INSERT INTO public.users (name, email, password) VALUES ($1, $2, $3) RETURNING *",
+      [name, cleanEmail, hashedPassword]
+    );
     res.json({ message: "User registered", user: result.rows[0] });
   } catch (err) {
     res.status(500).json({ error: err.message });
