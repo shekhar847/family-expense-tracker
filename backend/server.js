@@ -191,6 +191,21 @@ app.delete("/delete-expense/:id", async (req, res) => {
   }
 });
 
+// -------------------Edit Expense-------------------
+app.put("/edit-expense/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, amount, category } = req.body;
+    const result = await pool.query(
+      "UPDATE public.expenses SET title = $1, amount = $2, category = $3 WHERE id = $4 RETURNING *",
+      [title, amount, category, id]
+    );
+    res.json({ message: "Expense updated", expense: result.rows[0] });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
+});
 // -------------------Update Profile-------------------
 app.put("/update-profile", async (req, res) => {
   try {

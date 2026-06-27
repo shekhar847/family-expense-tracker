@@ -300,6 +300,39 @@ async function deleteExpense(id) {
     }
 }
 
+async function editExpense(id, title, amount, category) {
+    // Simple prompt se edit karo
+    const newTitle = prompt("Title:", title);
+    if (newTitle === null) return;
+
+    const newAmount = prompt("Amount:", amount);
+    if (newAmount === null) return;
+
+    if (!newTitle || !newAmount || Number(newAmount) <= 0) {
+        showToast("Valid data daalo", "danger");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${BASE_URL}/edit-expense/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: newTitle,
+                amount: newAmount,
+                category: category
+            })
+        });
+        const data = await res.json();
+        if (data.message) {
+            showToast("Expense updated!");
+            loadExpenses();
+        }
+    } catch (err) {
+        console.log(err);
+        showToast("Error updating", "danger");
+    }
+}
 // ---------------------------Filter Expenses-------------------
 function filterExpenses() {
     const q = document
