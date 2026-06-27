@@ -160,7 +160,15 @@ async function addExpense() {
     }
     const title = document.getElementById("title").value.trim();
     const amount = document.getElementById("amount").value.trim();
-    const category = document.getElementById("category").value;
+    
+    let category = document.getElementById("category").value;
+    if (category === "__custom__") {
+        category = document.getElementById("customCategory").value.trim();
+        if (!category) {
+            showToast("Custom category likho", "danger");
+            return;
+        }
+    }
 
     if (!title || !amount || !category) {
         showToast("Fill all fields", "danger");
@@ -175,7 +183,6 @@ async function addExpense() {
         showToast("Amount bahut zyada hai", "danger");
         return;
     }
-
     try {
         await fetch(`${BASE_URL}/add-expense`, {
             method: "POST",
@@ -192,6 +199,8 @@ async function addExpense() {
         document.getElementById("title").value = "";
         document.getElementById("amount").value = "";
         document.getElementById("category").value = "";
+        document.getElementById("customCategoryGroup").style.display = "none";
+        document.getElementById("customCategory").value = "";
         showToast("Expense Added");
         loadExpenses();
     } catch (err) {
@@ -801,5 +810,15 @@ window.addEventListener("load", () => {
             const navEl = document.querySelector(`[onclick*="${activeSection}"]`);
             showSection(activeSection, navEl);
         }
+    }
+});
+
+// Custom Category Toggle
+document.getElementById("category").addEventListener("change", function () {
+    const customGroup = document.getElementById("customCategoryGroup");
+    if (this.value === "__custom__") {
+        customGroup.style.display = "block";
+    } else {
+        customGroup.style.display = "none";
     }
 });
