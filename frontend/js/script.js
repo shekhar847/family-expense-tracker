@@ -54,31 +54,30 @@ async function loginUser() {
     try {
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
-
-        // Spinner show karo
         document.getElementById("loginCard").style.display = "none";
         document.getElementById("loadingSpinner").style.display = "block";
-
         const res = await fetch(`${BASE_URL}/login`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json"},
             body: JSON.stringify({
                 email,
                 password
             })
         });
         const data = await res.json();
-
-        // Spinner hide karo
         document.getElementById("loadingSpinner").style.display = "none";
-
         if (data.user) {
             currentUser = data.user;
             document.getElementById("userName").innerText = data.user.name;
             document.getElementById("userEmail").innerText = data.user.email;
-            document.getElementById("userAvatar").innerText = data.user.name.charAt(0).toUpperCase();
+            if (data.user.avatar) {
+                document.getElementById("userAvatar").innerHTML = `<img src="${data.user.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                document.getElementById("avatarPreview").src = data.user.avatar;
+                document.getElementById("avatarPreview").style.display = "block";
+            } else {
+                document.getElementById("userAvatar").innerText = data.user.name.charAt(0).toUpperCase();
+            }
+            document.getElementById("loginCard").style.display = "none";
             document.getElementById("dashboardContent").style.display = "block";
             document.getElementById("sidebarUser").style.display = "block";
             document.getElementById("footerBadges").style.display = "flex";
