@@ -3,8 +3,8 @@ const cors = require("cors");
 const cloudinary = require("cloudinary").v2;
 const pool = require("./db");
 
-const authRoutes = require("./authRoutes");
-const expenseRoutes = require("./expenseRoutes");
+const authRoutes = require("./routes/authRoutes");
+const expenseRoutes = require("./routes/expenseRoutes");
 
 const app = express();
 
