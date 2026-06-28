@@ -42,6 +42,23 @@ pool.query(`ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar TEXT`)
   .then(() => console.log("avatar column ready"))
   .catch(err => console.log("avatar column error:", err.message));
 
+// -------------------Family Members Table------------
+pool.query(`CREATE TABLE IF NOT EXISTS public.family_members (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER,
+  name TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`).then(() => console.log("family_members table ready"))
+  .catch(err => console.log("family_members table error:", err.message));
+
+pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS member_id INTEGER`)
+  .then(() => console.log("member_id column ready"))
+  .catch(err => console.log("member_id column error:", err.message));
+
+pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS member_name TEXT DEFAULT 'Self'`)
+  .then(() => console.log("member_name column ready"))
+  .catch(err => console.log("member_name column error:", err.message));
+
 // -------------------Routes--------------------------
 app.get("/", (req, res) => res.send("Backend running"));
 app.get("/test-db", async (req, res) => {
