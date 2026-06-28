@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const cloudinary = require("cloudinary").v2;
-const pool = require("./connection");
+const pool = require("./db");
 
 const authRoutes = require("./authRoutes");
 const expenseRoutes = require("./expenseRoutes");

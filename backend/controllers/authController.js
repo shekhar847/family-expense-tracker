@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const pool = require("./connection");
+const pool = require("./db");
 const cloudinary = require("cloudinary").v2;
 
 // -------------------Register------------------------
