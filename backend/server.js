@@ -69,6 +69,40 @@ app.get("/test-db", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
+// -------------------Family Members API-------------------
+app.get("/family-members/:user_id", async (req, res) => {
+    try {
+        const { user_id } = req.params;
+        const result = await pool.query(
+            "SELECT * FROM public.family_members WHERE user_id = $1 ORDER BY id ASC",
+            [user_id]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+app.post("/add-family-member", async (req, res) => {
+    try {
+        const { user_id, name } = req.body;
+        if (!user_id || !name) {
+            return res.status(400).json({ message: "All fields required" });
+        }
+        const result = await pool.query("INSERT INTO public.family_members (user_id, name) VALUES ($1, $2) RETURNING *", [user_id, name]);
+        res.json({ message: "Member added", member: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+app.delete("/delete-family-member/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query("DELETE FROM public.family_members WHERE id = $1", [id]);
+        res.json({ message: "Member deleted" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.use("/", authRoutes);
 app.use("/", expenseRoutes);
