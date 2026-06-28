@@ -21,7 +21,10 @@ const addExpense = async (req, res) => {
 const getExpenses = async (req, res) => {
   try {
     const { user_id } = req.params;
-    const result = await pool.query("SELECT id, user_id, title, amount, category, date FROM public.expenses WHERE user_id = $1 ORDER BY id DESC",[user_id]);
+    const result = await pool.query(
+      "SELECT id, user_id, title, amount, category, date, member_name FROM public.expenses WHERE user_id = $1 ORDER BY id DESC",
+      [user_id]
+    );
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

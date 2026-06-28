@@ -239,6 +239,9 @@ function renderExpenseList(data) {
             <span class="expense-title">
                 ${e.title}
             </span>
+            <span style="font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:10px;">
+                👤 ${e.member_name || 'Self'}
+            </span>
             <span class="expense-date" style="font-size:11px;color:var(--text3);">
                 ${e.date ? new Date(e.date).toLocaleDateString("en-IN") : "-"}
             </span>
