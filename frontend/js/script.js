@@ -585,6 +585,174 @@ function toggleTheme() {
     const btn = document.querySelector('.theme-toggle');
     if (btn) btn.textContent = isDark ? '☀' : '🌙';
 }
+// -------------------Voice Assistant-------------------
+function startVoice() {
+    const btn = document.getElementById("voiceBtn");
+    
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        showToast("Aapka browser voice support nahi karta", "danger");
+        return;
+    }
+
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "hi-IN"; // Hindi
+    recognition.interimResults = false;
+
+    btn.innerText = "🔴";
+    btn.style.background = "var(--redbg)";
+    showToast("Bol rahe hain... sun raha hoon 🎤");
+
+    recognition.start();
+
+    recognition.onresult = function(event) {
+        const text = event.results[0][0].transcript.toLowerCase();
+        console.log("Voice:", text);
+        btn.innerText = "🎤";
+        btn.style.background = "";
+        processVoiceCommand(text);
+    };
+
+    recognition.onerror = function() {
+        btn.innerText = "🎤";
+        btn.style.background = "";
+        showToast("Awaaz nahi suni — dobara try karo", "danger");
+    };
+
+    recognition.onend = function() {
+        btn.innerText = "🎤";
+        btn.style.background = "";
+    };
+}
+
+function processVoiceCommand(text) {
+    console.log("Processing:", text);
+
+    // -------------------Expense Add-------------------
+    if (text.includes("add") || text.includes("jodo") || text.includes("daalo") || text.includes("kharcha")) {
+        const amount = extractNumber(text);
+        const category = extractCategory(text);
+        const title = extractTitle(text);
+
+        if (amount && currentUser) {
+            document.getElementById("amount").value = amount;
+            document.getElementById("category").value = category;
+            document.getElementById("title").value = title;
+            showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
+            showToast(`✅ ${title} — ₹${amount} tayar hai, Add button dabao!`);
+        } else {
+            showToast("Amount nahi mila — dobara bolein", "danger");
+        }
+    }
+
+    // -------------------This Month Filter-------------------
+    else if (text.includes("is mahine") || text.includes("this month") || text.includes("mahina")) {
+        document.getElementById("filterMonth").value = "this";
+        filterByMonth();
+        showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
+        showToast("✅ Is mahine ke kharche dikh rahe hain");
+    }
+
+    // -------------------Last Month Filter-------------------
+    else if (text.includes("pichle mahine") || text.includes("last month")) {
+        document.getElementById("filterMonth").value = "last";
+        filterByMonth();
+        showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
+        showToast("✅ Pichle mahine ke kharche dikh rahe hain");
+    }
+
+    // -------------------PDF Download-------------------
+    else if (text.includes("pdf") || text.includes("report") || text.includes("download") || text.includes("nikalo")) {
+        showSection('reportSection', document.querySelector('[onclick*=reportSection]'));
+        setTimeout(() => downloadReport(), 500);
+        showToast("✅ PDF download ho raha hai...");
+    }
+
+    // -------------------Dashboard-------------------
+    else if (text.includes("dashboard") || text.includes("ghar") || text.includes("home") || text.includes("mukhya")) {
+        showSection('dashboardSection', document.querySelector('[onclick*=dashboardSection]'));
+        showToast("✅ Dashboard khul gaya");
+    }
+
+    // -------------------Reports-------------------
+    else if (text.includes("chart") || text.includes("graph") || text.includes("report") || text.includes("report dikhao")) {
+        showSection('reportSection', document.querySelector('[onclick*=reportSection]'));
+        showToast("✅ Reports khul gayi");
+    }
+
+    // -------------------Settings-------------------
+    else if (text.includes("setting") || text.includes("profile") || text.includes("account")) {
+        showSection('settingSection', document.querySelector('[onclick*=settingSection]'));
+        showToast("✅ Settings khul gayi");
+    }
+
+    // -------------------Budget Set-------------------
+    else if (text.includes("budget") && (text.includes("set") || text.includes("lagao") || text.includes("karo"))) {
+        const amount = extractNumber(text);
+        if (amount) {
+            localStorage.setItem("monthlyBudget", amount);
+            document.getElementById("budgetInput").value = amount;
+            checkBudget();
+            showToast(`✅ Budget ₹${amount} set ho gaya`);
+        } else {
+            showToast("Budget amount nahi mila", "danger");
+        }
+    }
+
+    // -------------------Logout-------------------
+    else if (text.includes("logout") || text.includes("bahar") || text.includes("sign out")) {
+        logout();
+    }
+
+    // -------------------Not Understood-------------------
+    else {
+        showToast(`"${text}" — samajh nahi aaya, dobara bolein`, "danger");
+    }
+}
+
+function extractNumber(text) {
+    // Words to numbers
+    const wordMap = {
+        "ek": 1, "do": 2, "teen": 3, "char": 4, "paanch": 5,
+        "chhe": 6, "saat": 7, "aath": 8, "nau": 9, "das": 10,
+        "bis": 20, "tees": 30, "chalis": 40, "pachas": 50,
+        "sau": 100, "hazaar": 1000, "lakh": 100000,
+        "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+        "hundred": 100, "thousand": 1000
+    };
+
+    // Direct number nikalo
+    const numMatch = text.match(/\d+/);
+    if (numMatch) return parseInt(numMatch[0]);
+
+    // Word se number nikalo
+    let total = 0;
+    const words = text.split(" ");
+    words.forEach(word => {
+        if (wordMap[word]) total += wordMap[word];
+    });
+
+    return total > 0 ? total : null;
+}
+
+function extractCategory(text) {
+    if (text.includes("khana") || text.includes("food") || text.includes("khaana") || text.includes("roti")) return "Food";
+    if (text.includes("safar") || text.includes("travel") || text.includes("train") || text.includes("bus") || text.includes("auto")) return "Travel";
+    if (text.includes("kiraya") || text.includes("rent") || text.includes("ghar")) return "Rent";
+    if (text.includes("shopping") || text.includes("kharidi") || text.includes("kapda")) return "Shopping";
+    return "Other";
+}
+
+function extractTitle(text) {
+    if (text.includes("khana") || text.includes("khaana")) return "Khana";
+    if (text.includes("chai")) return "Chai";
+    if (text.includes("sabzi")) return "Sabzi";
+    if (text.includes("train")) return "Train Ticket";
+    if (text.includes("bus")) return "Bus Ticket";
+    if (text.includes("auto")) return "Auto";
+    if (text.includes("kiraya")) return "Kiraya";
+    if (text.includes("shopping")) return "Shopping";
+    return "Voice Expense";
+}
 // ---------------------------Reset App-------------------------
 async function resetApp() {
     if (!currentUser) { showToast("Login first", "danger"); return; }
