@@ -1,4 +1,4 @@
-const pool = require("./db");
+const pool = require("../db");
 
 // -------------------Add Expense---------------------
 const addExpense = async (req, res) => {
