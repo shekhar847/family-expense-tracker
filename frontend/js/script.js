@@ -149,6 +149,7 @@ async function addExpense() {
     }
     const title = document.getElementById("title").value.trim();
     const amount = document.getElementById("amount").value.trim();
+    const memberName = document.getElementById("memberSelect").value;
     let category = document.getElementById("category").value;
     if (category === "__custom__") {
         category = document.getElementById("customCategory").value.trim();
@@ -177,12 +178,14 @@ async function addExpense() {
                 user_id: currentUser.id,
                 title,
                 amount,
-                category
+                category,
+                member_name: memberName
             })
         });
         document.getElementById("title").value = "";
         document.getElementById("amount").value = "";
         document.getElementById("category").value = "";
+        document.getElementById("memberSelect").value = "Self";
         document.getElementById("customCategoryGroup").style.display = "none";
         document.getElementById("customCategory").value = "";
         showToast("Expense Added");
