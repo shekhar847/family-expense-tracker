@@ -625,13 +625,16 @@ function startVoice() {
 }
 
 function processVoiceCommand(text) {
-    console.log("Processing:", text);
+    console.log("Voice text:", text);
+
+    // Hindi + English dono handle karo
+    const t = text.toLowerCase();
 
     // -------------------Expense Add-------------------
-    if (text.includes("add") || text.includes("jodo") || text.includes("daalo") || text.includes("kharcha")) {
-        const amount = extractNumber(text);
-        const category = extractCategory(text);
-        const title = extractTitle(text);
+    if (t.includes("add") || t.includes("जोड") || t.includes("डालो") || t.includes("खर्च") || t.includes("kharcha") || t.includes("खाना") || t.includes("khana")) {
+        const amount = extractNumber(t);
+        const category = extractCategory(t);
+        const title = extractTitle(t);
 
         if (amount && currentUser) {
             document.getElementById("amount").value = amount;
@@ -644,113 +647,108 @@ function processVoiceCommand(text) {
         }
     }
 
-    // -------------------This Month Filter-------------------
-    else if (text.includes("is mahine") || text.includes("this month") || text.includes("mahina")) {
+    // -------------------This Month-------------------
+    else if (t.includes("इस महीने") || t.includes("is mahine") || t.includes("this month") || t.includes("महीना")) {
         document.getElementById("filterMonth").value = "this";
         filterByMonth();
         showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
         showToast("✅ Is mahine ke kharche dikh rahe hain");
     }
 
-    // -------------------Last Month Filter-------------------
-    else if (text.includes("pichle mahine") || text.includes("last month")) {
+    // -------------------Last Month-------------------
+    else if (t.includes("पिछले महीने") || t.includes("pichle mahine") || t.includes("last month")) {
         document.getElementById("filterMonth").value = "last";
         filterByMonth();
         showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
-        showToast("✅ Pichle mahine ke kharche dikh rahe hain");
+        showToast("✅ Pichle mahine ke kharche");
     }
 
-    // -------------------PDF Download-------------------
-    else if (text.includes("pdf") || text.includes("report") || text.includes("download") || text.includes("nikalo")) {
+    // -------------------PDF-------------------
+    else if (t.includes("pdf") || t.includes("रिपोर्ट") || t.includes("report") || t.includes("download") || t.includes("डाउनलोड")) {
         showSection('reportSection', document.querySelector('[onclick*=reportSection]'));
         setTimeout(() => downloadReport(), 500);
         showToast("✅ PDF download ho raha hai...");
     }
 
     // -------------------Dashboard-------------------
-    else if (text.includes("dashboard") || text.includes("ghar") || text.includes("home") || text.includes("mukhya")) {
+    else if (t.includes("dashboard") || t.includes("डैशबोर्ड") || t.includes("home") || t.includes("होम")) {
         showSection('dashboardSection', document.querySelector('[onclick*=dashboardSection]'));
         showToast("✅ Dashboard khul gaya");
     }
 
     // -------------------Reports-------------------
-    else if (text.includes("chart") || text.includes("graph") || text.includes("report") || text.includes("report dikhao")) {
+    else if (t.includes("chart") || t.includes("चार्ट") || t.includes("graph") || t.includes("रिपोर्ट")) {
         showSection('reportSection', document.querySelector('[onclick*=reportSection]'));
         showToast("✅ Reports khul gayi");
     }
 
     // -------------------Settings-------------------
-    else if (text.includes("setting") || text.includes("profile") || text.includes("account")) {
+    else if (t.includes("setting") || t.includes("सेटिंग") || t.includes("profile") || t.includes("प्रोफाइल")) {
         showSection('settingSection', document.querySelector('[onclick*=settingSection]'));
         showToast("✅ Settings khul gayi");
     }
 
-    // -------------------Budget Set-------------------
-    else if (text.includes("budget") && (text.includes("set") || text.includes("lagao") || text.includes("karo"))) {
-        const amount = extractNumber(text);
+    // -------------------Budget-------------------
+    else if (t.includes("budget") || t.includes("बजट")) {
+        const amount = extractNumber(t);
         if (amount) {
             localStorage.setItem("monthlyBudget", amount);
             document.getElementById("budgetInput").value = amount;
             checkBudget();
             showToast(`✅ Budget ₹${amount} set ho gaya`);
-        } else {
-            showToast("Budget amount nahi mila", "danger");
         }
     }
 
     // -------------------Logout-------------------
-    else if (text.includes("logout") || text.includes("bahar") || text.includes("sign out")) {
+    else if (t.includes("logout") || t.includes("बाहर") || t.includes("sign out")) {
         logout();
     }
 
-    // -------------------Not Understood-------------------
     else {
-        showToast(`"${text}" — samajh nahi aaya, dobara bolein`, "danger");
+        showToast(`"${text}" — dobara bolein`, "danger");
     }
 }
 
 function extractNumber(text) {
-    // Words to numbers
+    // ₹300 ya 300 nikalo
+    const numMatch = text.match(/[₹]?\s*(\d+)/);
+    if (numMatch) return parseInt(numMatch[1]);
+
+    // Hindi words
     const wordMap = {
+        "एक": 1, "दो": 2, "तीन": 3, "चार": 4, "पाँच": 5,
+        "छह": 6, "सात": 7, "आठ": 8, "नौ": 9, "दस": 10,
+        "बीस": 20, "तीस": 30, "चालीस": 40, "पचास": 50,
+        "सौ": 100, "हज़ार": 1000, "हजार": 1000,
         "ek": 1, "do": 2, "teen": 3, "char": 4, "paanch": 5,
-        "chhe": 6, "saat": 7, "aath": 8, "nau": 9, "das": 10,
-        "bis": 20, "tees": 30, "chalis": 40, "pachas": 50,
-        "sau": 100, "hazaar": 1000, "lakh": 100000,
-        "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
-        "hundred": 100, "thousand": 1000
+        "sau": 100, "hazaar": 1000, "thousand": 1000, "hundred": 100
     };
 
-    // Direct number nikalo
-    const numMatch = text.match(/\d+/);
-    if (numMatch) return parseInt(numMatch[0]);
-
-    // Word se number nikalo
     let total = 0;
-    const words = text.split(" ");
+    const words = text.split(/\s+/);
     words.forEach(word => {
         if (wordMap[word]) total += wordMap[word];
     });
-
     return total > 0 ? total : null;
 }
 
 function extractCategory(text) {
-    if (text.includes("khana") || text.includes("food") || text.includes("khaana") || text.includes("roti")) return "Food";
-    if (text.includes("safar") || text.includes("travel") || text.includes("train") || text.includes("bus") || text.includes("auto")) return "Travel";
-    if (text.includes("kiraya") || text.includes("rent") || text.includes("ghar")) return "Rent";
-    if (text.includes("shopping") || text.includes("kharidi") || text.includes("kapda")) return "Shopping";
+    if (text.includes("खाना") || text.includes("खाने") || text.includes("food") || text.includes("khana") || text.includes("chai") || text.includes("चाय") || text.includes("sabzi") || text.includes("सब्जी")) return "Food";
+    if (text.includes("सफर") || text.includes("travel") || text.includes("train") || text.includes("ट्रेन") || text.includes("bus") || text.includes("बस") || text.includes("auto") || text.includes("ऑटो")) return "Travel";
+    if (text.includes("किराया") || text.includes("rent") || text.includes("kiraya")) return "Rent";
+    if (text.includes("shopping") || text.includes("शॉपिंग") || text.includes("कपड़े")) return "Shopping";
     return "Other";
 }
 
 function extractTitle(text) {
-    if (text.includes("khana") || text.includes("khaana")) return "Khana";
-    if (text.includes("chai")) return "Chai";
-    if (text.includes("sabzi")) return "Sabzi";
-    if (text.includes("train")) return "Train Ticket";
-    if (text.includes("bus")) return "Bus Ticket";
-    if (text.includes("auto")) return "Auto";
-    if (text.includes("kiraya")) return "Kiraya";
-    if (text.includes("shopping")) return "Shopping";
+    if (text.includes("खाना") || text.includes("khana")) return "Khana";
+    if (text.includes("चाय") || text.includes("chai")) return "Chai";
+    if (text.includes("सब्जी") || text.includes("sabzi")) return "Sabzi";
+    if (text.includes("ट्रेन") || text.includes("train")) return "Train Ticket";
+    if (text.includes("बस") || text.includes("bus")) return "Bus Ticket";
+    if (text.includes("ऑटो") || text.includes("auto")) return "Auto";
+    if (text.includes("किराया") || text.includes("kiraya")) return "Kiraya";
+    if (text.includes("shopping") || text.includes("शॉपिंग")) return "Shopping";
     return "Voice Expense";
 }
 // ---------------------------Reset App-------------------------
