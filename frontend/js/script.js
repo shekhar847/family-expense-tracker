@@ -172,7 +172,7 @@ async function addExpense() {
     try {
         await fetch(`${BASE_URL}/add-expense`, {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 user_id: currentUser.id,
                 title,
@@ -205,6 +205,7 @@ async function loadExpenses() {
         renderReportTable(data);
         renderRecentExpenses(data);
         checkBudget();
+        loadFamilyMembers();
     } catch (err) {
         document.getElementById("loadingSpinner").style.display = "none";
         showToast("Server se connect nahi ho pa raha, please wait...", "danger");
@@ -275,7 +276,7 @@ function renderRecentExpenses(data) {
 async function deleteExpense(id) {
     if (!confirm("Are you sure you want to delete this expense?")) return;
     try {
-        await fetch( `${BASE_URL}/delete-expense/${id}`, {method: "DELETE"});
+        await fetch(`${BASE_URL}/delete-expense/${id}`, { method: "DELETE" });
         showToast("Expense Deleted", "danger");
         loadExpenses();
     } catch (err) {
@@ -588,54 +589,43 @@ function toggleTheme() {
 // -------------------Voice Assistant-------------------
 function startVoice() {
     const btn = document.getElementById("voiceBtn");
-    
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         showToast("Aapka browser voice support nahi karta", "danger");
         return;
     }
-
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = "hi-IN"; // Hindi
     recognition.interimResults = false;
-
     btn.innerText = "🔴";
     btn.style.background = "var(--redbg)";
     showToast("Bol rahe hain... sun raha hoon 🎤");
-
     recognition.start();
-
-    recognition.onresult = function(event) {
+    recognition.onresult = function (event) {
         const text = event.results[0][0].transcript.toLowerCase();
         console.log("Voice:", text);
         btn.innerText = "🎤";
         btn.style.background = "";
         processVoiceCommand(text);
     };
-
-    recognition.onerror = function() {
+    recognition.onerror = function () {
         btn.innerText = "🎤";
         btn.style.background = "";
         showToast("Awaaz nahi suni — dobara try karo", "danger");
     };
-
-    recognition.onend = function() {
+    recognition.onend = function () {
         btn.innerText = "🎤";
         btn.style.background = "";
     };
 }
-
 function processVoiceCommand(text) {
     console.log("Voice text:", text);
-
     // Hindi + English dono handle karo
     const t = text.toLowerCase();
-
     // -------------------Expense Add-------------------
     if (t.includes("add") || t.includes("जोड") || t.includes("डालो") || t.includes("खर्च") || t.includes("kharcha") || t.includes("खाना") || t.includes("khana")) {
         const amount = extractNumber(t);
         const category = extractCategory(t);
         const title = extractTitle(t);
-
         if (amount && currentUser) {
             document.getElementById("amount").value = amount;
             document.getElementById("category").value = category;
@@ -646,7 +636,6 @@ function processVoiceCommand(text) {
             showToast("Amount nahi mila — dobara bolein", "danger");
         }
     }
-
     // -------------------This Month-------------------
     else if (t.includes("इस महीने") || t.includes("is mahine") || t.includes("this month") || t.includes("महीना")) {
         document.getElementById("filterMonth").value = "this";
@@ -654,7 +643,6 @@ function processVoiceCommand(text) {
         showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
         showToast("✅ Is mahine ke kharche dikh rahe hain");
     }
-
     // -------------------Last Month-------------------
     else if (t.includes("पिछले महीने") || t.includes("pichle mahine") || t.includes("last month")) {
         document.getElementById("filterMonth").value = "last";
@@ -662,32 +650,27 @@ function processVoiceCommand(text) {
         showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
         showToast("✅ Pichle mahine ke kharche");
     }
-
     // -------------------PDF-------------------
     else if (t.includes("pdf") || t.includes("रिपोर्ट") || t.includes("report") || t.includes("download") || t.includes("डाउनलोड")) {
         showSection('reportSection', document.querySelector('[onclick*=reportSection]'));
         setTimeout(() => downloadReport(), 500);
         showToast("✅ PDF download ho raha hai...");
     }
-
     // -------------------Dashboard-------------------
     else if (t.includes("dashboard") || t.includes("डैशबोर्ड") || t.includes("home") || t.includes("होम")) {
         showSection('dashboardSection', document.querySelector('[onclick*=dashboardSection]'));
         showToast("✅ Dashboard khul gaya");
     }
-
     // -------------------Reports-------------------
     else if (t.includes("chart") || t.includes("चार्ट") || t.includes("graph") || t.includes("रिपोर्ट")) {
         showSection('reportSection', document.querySelector('[onclick*=reportSection]'));
         showToast("✅ Reports khul gayi");
     }
-
     // -------------------Settings-------------------
     else if (t.includes("setting") || t.includes("सेटिंग") || t.includes("profile") || t.includes("प्रोफाइल")) {
         showSection('settingSection', document.querySelector('[onclick*=settingSection]'));
         showToast("✅ Settings khul gayi");
     }
-
     // -------------------Budget-------------------
     else if (t.includes("budget") || t.includes("बजट")) {
         const amount = extractNumber(t);
@@ -698,22 +681,18 @@ function processVoiceCommand(text) {
             showToast(`✅ Budget ₹${amount} set ho gaya`);
         }
     }
-
     // -------------------Logout-------------------
     else if (t.includes("logout") || t.includes("बाहर") || t.includes("sign out")) {
         logout();
     }
-
     else {
         showToast(`"${text}" — dobara bolein`, "danger");
     }
 }
-
 function extractNumber(text) {
     // ₹300 ya 300 nikalo
     const numMatch = text.match(/[₹]?\s*(\d+)/);
     if (numMatch) return parseInt(numMatch[1]);
-
     // Hindi words
     const wordMap = {
         "एक": 1, "दो": 2, "तीन": 3, "चार": 4, "पाँच": 5,
@@ -723,7 +702,6 @@ function extractNumber(text) {
         "ek": 1, "do": 2, "teen": 3, "char": 4, "paanch": 5,
         "sau": 100, "hazaar": 1000, "thousand": 1000, "hundred": 100
     };
-
     let total = 0;
     const words = text.split(/\s+/);
     words.forEach(word => {
@@ -731,7 +709,6 @@ function extractNumber(text) {
     });
     return total > 0 ? total : null;
 }
-
 function extractCategory(text) {
     if (text.includes("खाना") || text.includes("खाने") || text.includes("food") || text.includes("khana") || text.includes("chai") || text.includes("चाय") || text.includes("sabzi") || text.includes("सब्जी")) return "Food";
     if (text.includes("सफर") || text.includes("travel") || text.includes("train") || text.includes("ट्रेन") || text.includes("bus") || text.includes("बस") || text.includes("auto") || text.includes("ऑटो")) return "Travel";
@@ -739,7 +716,6 @@ function extractCategory(text) {
     if (text.includes("shopping") || text.includes("शॉपिंग") || text.includes("कपड़े")) return "Shopping";
     return "Other";
 }
-
 function extractTitle(text) {
     if (text.includes("खाना") || text.includes("khana")) return "Khana";
     if (text.includes("चाय") || text.includes("chai")) return "Chai";
@@ -844,6 +820,72 @@ function saveBudget() {
     localStorage.setItem("monthlyBudget", budget);
     showToast("Budget saved!");
     checkBudget();
+}
+// -------------------Family Members-------------------
+async function addFamilyMember() {
+    const name = document.getElementById("memberName").value.trim();
+    if (!name) {
+        showToast("Naam likho", "danger");
+        return;
+    }
+    if (!currentUser) {
+        showToast("Login first", "danger");
+        return;
+    }
+    try {
+        const res = await fetch(`${BASE_URL}/add-family-member`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: currentUser.id, name })
+        });
+        const data = await res.json();
+        if (data.member) {
+            showToast(`✅ ${name} add ho gaya!`);
+            document.getElementById("memberName").value = "";
+            loadFamilyMembers();
+        }
+    } catch (err) {
+        showToast("Error adding member", "danger");
+    }
+}
+async function loadFamilyMembers() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(`${BASE_URL}/family-members/${currentUser.id}`);
+        const members = await res.json();
+        const container = document.getElementById("familyMembersList");
+        if (!container) return;
+        if (members.length === 0) {
+            container.innerHTML = `<p style="color:var(--text3);font-size:13px;">Koi family member nahi — abhi add karo!</p>`;
+            return;
+        }
+        container.innerHTML = members.map(m => `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:8px;">
+                <span style="font-size:14px;">👤 ${m.name}</span>
+                <button class="btn-del" onclick="deleteFamilyMember(${m.id})">🗑</button>
+            </div>
+        `).join("");
+        // Expense form mein member dropdown update karo
+        updateMemberDropdown(members);
+    } catch (err) {
+        console.log(err);
+    }
+}
+async function deleteFamilyMember(id) {
+    if (!confirm("Is member ko delete karo?")) return;
+    try {
+        await fetch(`${BASE_URL}/delete-family-member/${id}`, { method: "DELETE" });
+        showToast("Member delete ho gaya", "danger");
+        loadFamilyMembers();
+    } catch (err) {
+        showToast("Error", "danger");
+    }
+}
+function updateMemberDropdown(members) {
+    const select = document.getElementById("memberSelect");
+    if (!select) return;
+    select.innerHTML = `<option value="Self">👤 Self</option>` +
+        members.map(m => `<option value="${m.name}">${m.name}</option>`).join("");
 }
 // ---------------------------CheckBudget-----------------------
 function checkBudget() {

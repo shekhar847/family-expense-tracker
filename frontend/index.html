@@ -402,13 +402,24 @@
                 </div>
                 <div class="settings-section">
                     <div class="settings-title">💰 Monthly Budget</div>
-                    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;"> Monthly budget set karo — exceed
+                    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">Monthly budget set karo — exceed
                         hone pe alert aayega.</p>
                     <div style="display:flex;gap:10px;align-items:center;">
                         <input type="number" id="budgetInput" placeholder="e.g. 10000" style="max-width:200px;" min="0">
                         <button class="btn-primary-custom" onclick="saveBudget()">Save Budget</button>
                     </div>
                     <div id="budgetStatus" style="margin-top:10px;font-size:13px;color:var(--text2);"></div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">👨‍👩‍👧‍👦 Family Members</div>
+                    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">
+                        Family members add karo — unke kharche alag track karo.
+                    </p>
+                    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;">
+                        <input type="text" id="memberName" placeholder="e.g. Papa, Mummy, Bhai">
+                        <button class="btn-primary-custom" onclick="addFamilyMember()">Add +</button>
+                    </div>
+                    <div id="familyMembersList"></div>
                 </div>
             </div>
         </div>
