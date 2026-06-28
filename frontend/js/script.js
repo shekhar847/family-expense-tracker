@@ -207,6 +207,7 @@ async function loadExpenses() {
         renderCharts(data);
         renderReportTable(data);
         renderRecentExpenses(data);
+        renderFamilySummary(data);
         checkBudget();
         loadFamilyMembers();
     } catch (err) {
@@ -401,6 +402,31 @@ function updateStats(data) {
     document.getElementById("statMonth").innerText = total.toFixed(2);
     document.getElementById("statCount").innerText = data.length;
     document.getElementById("statAvg").innerText = avg.toFixed(2);
+}
+
+function renderFamilySummary(data) {
+    const summary = {};
+    data.forEach(e => {
+        const member = e.member_name || 'Self';
+        summary[member] = (summary[member] || 0) + Number(e.amount);
+    });
+
+    const container = document.getElementById("familySummary");
+    const list = document.getElementById("familySummaryList");
+    if (!container || !list) return;
+
+    if (Object.keys(summary).length === 0) {
+        container.style.display = "none";
+        return;
+    }
+
+    container.style.display = "block";
+    list.innerHTML = Object.entries(summary).map(([name, total]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:14px;">👤 ${name}</span>
+            <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);">₹${total.toFixed(2)}</span>
+        </div>
+    `).join("");
 }
 // ---------------------------Chart-----------------------------
 function renderCharts(data) {
