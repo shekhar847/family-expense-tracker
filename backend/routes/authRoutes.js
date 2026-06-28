@@ -4,7 +4,7 @@ const multer = require("multer");
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-const { register, login, uploadAvatar, updateProfile, changePassword } = require("./authController");
+const { register, login, uploadAvatar, updateProfile, changePassword } = require("../controllers/authController");
 
 router.post("/register", register);
 router.post("/login", login);
