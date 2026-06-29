@@ -27,6 +27,7 @@ function showSection(id, el = null) {
     if (id === "reportSection") {
         setTimeout(() => {
             loadExpenses();
+            loadMonthlyTrend();
         }, 300);
     }
     if (id === "settingSection" && currentUser) {
@@ -512,6 +513,51 @@ function renderCharts(data) {
         });
     }
 }
+// ---------------------------Monthly Trend Chart---------------
+async function loadMonthlyTrend() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(`${BASE_URL}/monthly-trend/${currentUser.id}`);
+        const data = await res.json();
+        const labels = data.map(d => d.month);
+        const values = data.map(d => Number(d.total));
+        const canvas = document.getElementById("trendChart");
+        if (!canvas) return;
+        if (window.trendChartInst) {
+            window.trendChartInst.destroy();
+        }
+        window.trendChartInst = new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Monthly Spending ₹",
+                    data: values,
+                    backgroundColor: "#c8f135",
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (value) => "₹" + value
+                        }
+                    }
+                }
+            }
+        });
+    } catch (err) {
+        console.log(err);
+    }
+}
 // ---------------------------Report Table----------------------
 function renderReportTable(data) {
     const tbody = document.getElementById("reportTableBody");
@@ -622,7 +668,7 @@ function toggleTheme() {
     const btn = document.querySelector('.theme-toggle');
     if (btn) btn.textContent = isDark ? '☀' : '🌙';
 }
-// -------------------Voice Assistant-------------------
+// ---------------------------Voice Assistant-------------------
 function startVoice() {
     const btn = document.getElementById("voiceBtn");
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
