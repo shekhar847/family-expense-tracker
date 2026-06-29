@@ -33,6 +33,11 @@ function showSection(id, el = null) {
     if (id === "settingSection" && currentUser) {
         document.getElementById("profileName").value = currentUser.name || "";
         document.getElementById("profileEmail").value = currentUser.email || "";
+        // Budget value fill karo
+        const savedBudget = localStorage.getItem("monthlyBudget");
+        if (savedBudget) {
+            document.getElementById("budgetInput").value = savedBudget;
+        }
     }
     localStorage.setItem("activeSection", id);
 }
