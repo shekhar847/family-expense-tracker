@@ -842,6 +842,39 @@ function downloadReport() {
         showToast("PDF Error", "danger");
     }
 }
+// ---------------------------CSV Export------------------------
+function downloadCSV() {
+    const rows = document.querySelectorAll("#reportTableBody tr");
+    if (rows.length === 0) {
+        showToast("Koi data nahi", "danger");
+        return;
+    }
+    let csv = "No,Title,Category,Amount,Date\n";
+    let hasData = false;
+    rows.forEach((row, index) => {
+        const cols = row.querySelectorAll("td");
+        if (cols.length < 4) return;
+        if (row.style.display === "none") return;
+        hasData = true;
+        const title = cols[1].innerText.replace(/,/g, " ");
+        const category = cols[2].innerText.replace(/,/g, " ");
+        const amount = cols[3].innerText.replace(/[₹,]/g, "").trim();
+        const date = cols[4] ? cols[4].innerText.trim() : "-";
+        csv += `${index + 1},${title},${category},${amount},${date}\n`;
+    });
+    if (!hasData) {
+        showToast("Koi visible data nahi", "danger");
+        return;
+    }
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "Expense_Report.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast("CSV Downloaded!");
+}
 // ---------------------------saveBudget------------------------
 function saveBudget() {
     const budget = Number(document.getElementById("budgetInput").value);
