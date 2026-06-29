@@ -404,14 +404,24 @@ function filterReport() {
 // ---------------------------State-----------------------------
 function updateStats(data) {
     let total = 0;
+    const catTotals = {};
     data.forEach(e => {
         total += Number(e.amount);
+        const cat = e.category || "Other";
+        catTotals[cat] = (catTotals[cat] || 0) + Number(e.amount);
     });
     const avg = data.length > 0 ? total / data.length : 0;
     document.getElementById("statTotal").innerText = total.toFixed(2);
     document.getElementById("statMonth").innerText = total.toFixed(2);
     document.getElementById("statCount").innerText = data.length;
     document.getElementById("statAvg").innerText = avg.toFixed(2);
+    if (Object.keys(catTotals).length > 0) {
+        const highestCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+        const el = document.getElementById("highestCat");
+        if (el) {
+            el.innerText = `🔥 Highest: ${highestCat[0]} — ₹${highestCat[1].toFixed(2)}`;
+        }
+    }
 }
 
 function renderFamilySummary(data) {
