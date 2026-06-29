@@ -150,6 +150,7 @@ async function addExpense() {
     const title = document.getElementById("title").value.trim();
     const amount = document.getElementById("amount").value.trim();
     const memberName = document.getElementById("memberSelect").value;
+    const notes = document.getElementById("expenseNotes").value.trim();
     let category = document.getElementById("category").value;
     if (category === "__custom__") {
         category = document.getElementById("customCategory").value.trim();
@@ -179,13 +180,15 @@ async function addExpense() {
                 title,
                 amount,
                 category,
-                member_name: memberName
+                member_name: memberName,
+                notes
             })
         });
         document.getElementById("title").value = "";
         document.getElementById("amount").value = "";
         document.getElementById("category").value = "";
         document.getElementById("memberSelect").value = "Self";
+        document.getElementById("expenseNotes").value = "";
         document.getElementById("customCategoryGroup").style.display = "none";
         document.getElementById("customCategory").value = "";
         showToast("Expense Added");

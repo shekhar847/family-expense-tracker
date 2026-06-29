@@ -267,6 +267,10 @@
                                 </select>
                             </div>
                             <div>
+                                <label class="form-label">Notes (Optional)</label>
+                                <input type="text" id="expenseNotes" placeholder="e.g. Medical bill, Office trip">
+                            </div>
+                            <div>
                                 <label class="form-label">&nbsp;</label>
                                 <button class="btn-primary-custom" onclick="addExpense()">Add +</button>
                             </div>
@@ -336,8 +340,10 @@
                                 <option value="this">This Month</option>
                                 <option value="last">Last Month</option>
                             </select>
-                            <button class="btn-danger-custom" onclick="downloadReport()" style="font-size:12.5px;padding:7px 14px;"> ↓ PDF Export</button>
-                            <button class="btn-danger-custom" onclick="downloadCSV()" style="font-size:12.5px;padding:7px 14px;"> ↓ CSV Export</button>
+                            <button class="btn-danger-custom" onclick="downloadReport()"
+                                style="font-size:12.5px;padding:7px 14px;"> ↓ PDF Export</button>
+                            <button class="btn-danger-custom" onclick="downloadCSV()"
+                                style="font-size:12.5px;padding:7px 14px;"> ↓ CSV Export</button>
                         </div>
                     </div>
                 </div>

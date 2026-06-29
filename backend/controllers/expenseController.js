@@ -3,7 +3,7 @@ const pool = require("../db");
 // -------------------Add Expense---------------------
 const addExpense = async (req, res) => {
   try {
-    const { user_id, title, amount, category, member_name } = req.body;
+    const { user_id, title, amount, category, member_name, notes } = req.body;
     if (!user_id || !title || !amount) {
       return res.status(400).json({ message: "All fields required" });
     }
@@ -12,8 +12,8 @@ const addExpense = async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
     const result = await pool.query(
-      `INSERT INTO public.expenses (user_id, title, amount, category, member_name) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [user_id, title, amount, category, member_name || 'Self']
+      `INSERT INTO public.expenses (user_id, title, amount, category, member_name, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [user_id, title, amount, category, member_name || 'Self', notes || '']
     );
     res.json({ message: "Expense added successfully", expense: result.rows[0] });
   } catch (err) {
