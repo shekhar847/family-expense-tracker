@@ -172,6 +172,24 @@
                             <div class="stat-icon">◉</div>
                         </div>
                     </div>
+                    <!-- Budget Progress Bar -->
+                    <div id="budgetProgressCard" class="card-panel" style="margin-bottom:20px;display:none;">
+                        <div class="card-header-row">
+                            <div class="card-title">💰 Monthly Budget</div>
+                            <span id="budgetProgressText" style="font-size:13px;color:var(--text2);"></span>
+                        </div>
+                        <div style="padding:16px 20px;">
+                            <div style="background:var(--bg3);border-radius:20px;height:12px;overflow:hidden;">
+                                <div id="budgetProgressBar"
+                                    style="height:100%;border-radius:20px;background:var(--accent);width:0%;transition:width 0.5s ease;">
+                                </div>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-top:8px;">
+                                <span style="font-size:12px;color:var(--text3);">₹0</span>
+                                <span id="budgetProgressLimit" style="font-size:12px;color:var(--text3);"></span>
+                            </div>
+                        </div>
+                    </div>
                     <div id="familySummary" class="card-panel" style="margin-bottom:20px;display:none;">
                         <div class="card-header-row">
                             <div class="card-title">👨‍👩‍👧‍👦 Family Summary</div>

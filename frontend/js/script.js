@@ -853,7 +853,7 @@ function saveBudget() {
     showToast("Budget saved!");
     checkBudget();
 }
-// -------------------Family Members-------------------
+// ---------------------------Family Members--------------------
 async function addFamilyMember() {
     const name = document.getElementById("memberName").value.trim();
     if (!name) {
@@ -922,17 +922,43 @@ function updateMemberDropdown(members) {
 // ---------------------------CheckBudget-----------------------
 function checkBudget() {
     const budget = Number(localStorage.getItem("monthlyBudget"));
-    if (!budget) return;
+    const budgetCard = document.getElementById("budgetProgressCard");
+    if (!budget) {
+        if (budgetCard) budgetCard.style.display = "none";
+        return;
+    }
     const total = Number(document.getElementById("statMonth").innerText);
     const status = document.getElementById("budgetStatus");
     const remaining = budget - total;
-    if (remaining < 0) {
-        status.innerHTML = `<span style="color:var(--red);">⚠ Budget exceed ho gaya! ₹${Math.abs(remaining).toFixed(2)} zyada kharch kiya</span>`;
-        showToast(`⚠ Budget exceed! ₹${Math.abs(remaining).toFixed(2)} zyada`, "danger");
-    } else {
-        status.innerHTML = `<span style="color:#3dd9a4;">✓ ₹${remaining.toFixed(2)} remaining this month</span>`;
+    const percentage = Math.min((total / budget) * 100, 100);
+    if (budgetCard) budgetCard.style.display = "block";
+    const bar = document.getElementById("budgetProgressBar");
+    const text = document.getElementById("budgetProgressText");
+    const limit = document.getElementById("budgetProgressLimit");
+    if (bar) {
+        bar.style.width = percentage + "%";
+        if (percentage >= 100) {
+            bar.style.background = "var(--red)";
+        } else if (percentage >= 80) {
+            bar.style.background = "var(--amber)";
+        } else {
+            bar.style.background = "var(--accent)";
+        }
     }
-    document.getElementById("budgetInput").value = budget;
+    if (text) text.innerText = `₹${total.toFixed(2)} / ₹${budget.toFixed(2)}`;
+    if (limit) limit.innerText = `Budget: ₹${budget.toFixed(2)}`;
+    if (status) {
+        if (remaining < 0) {
+            status.innerHTML = `<span style="color:var(--red);">⚠ Budget exceed ho gaya! ₹${Math.abs(remaining).toFixed(2)} zyada kharch kiya</span>`;
+            showToast(`⚠ Budget exceed! ₹${Math.abs(remaining).toFixed(2)} zyada`, "danger");
+        } else if (percentage >= 80) {
+            status.innerHTML = `<span style="color:var(--amber);">⚠ Budget ka ${percentage.toFixed(0)}% use ho gaya! ₹${remaining.toFixed(2)} bacha hai</span>`;
+        } else {
+            status.innerHTML = `<span style="color:#3dd9a4;">✓ ₹${remaining.toFixed(2)} remaining this month</span>`;
+        }
+    }
+    const budgetInput = document.getElementById("budgetInput");
+    if (budgetInput) budgetInput.value = budget;
 }
 // ---------------------------UploadAvtar-----------------------
 async function uploadAvatar() {
