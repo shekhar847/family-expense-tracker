@@ -106,6 +106,27 @@ app.delete("/delete-family-member/:id", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+// -------------------Monthly Trend-------------------
+app.get("/monthly-trend/:user_id", async (req, res) => {
+    try {
+        const { user_id } = req.params;
+        const result = await pool.query(
+            `SELECT 
+                TO_CHAR(date, 'Mon YYYY') as month,
+                TO_CHAR(date, 'YYYY-MM') as month_key,
+                SUM(amount) as total
+            FROM public.expenses 
+            WHERE user_id = $1 
+            AND date >= NOW() - INTERVAL '6 months'
+            GROUP BY month, month_key
+            ORDER BY month_key ASC`,
+            [user_id]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.use("/", authRoutes);
 app.use("/", expenseRoutes);
