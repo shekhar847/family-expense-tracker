@@ -42,6 +42,9 @@ pool.query(`ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar TEXT`)
   .then(() => console.log("avatar column ready"))
   .catch(err => console.log("avatar column error:", err.message));
 
+pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT ''`)
+  .then(() => console.log("notes column ready"))
+  .catch(err => console.log("notes column error:", err.message));
 // -------------------Family Members Table------------
 pool.query(`CREATE TABLE IF NOT EXISTS public.family_members (
   id SERIAL PRIMARY KEY,
