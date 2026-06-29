@@ -241,8 +241,9 @@ function renderExpenseList(data) {
                 ${e.category}
             </span>
             <span class="expense-title">
-                ${e.title}
+                 ${e.title}
             </span>
+            ${e.notes ? `<span style="font-size:11px;color:var(--text3);font-style:italic;">${e.notes}</span>` : ''}
             <span style="font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:10px;">
                 👤 ${e.member_name || 'Self'}
             </span>
