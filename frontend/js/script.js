@@ -962,6 +962,26 @@ function downloadCSV() {
     URL.revokeObjectURL(url);
     showToast("CSV Downloaded!");
 }
+// -------------------WhatsApp Share-------------------
+function shareWhatsApp() {
+    const total = document.getElementById("statMonth")?.innerText || "0";
+    const count = document.getElementById("statCount")?.innerText || "0";
+    const highest = document.getElementById("highestCat")?.innerText || "";
+    const userName = currentUser?.name || "User";
+    const today = new Date();
+    const monthName = today.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+    const message = `💰 *ExpenseIQ — Monthly Summary*\n\n` +
+        `👤 ${userName}\n` +
+        `📅 ${monthName}\n\n` +
+        `💵 Total Spent: ₹${total}\n` +
+        `📊 Transactions: ${count}\n` +
+        `${highest}\n\n` +
+        `Tracked using ExpenseIQ 🚀\n` +
+        `${BASE_URL.replace("expense-tracker-backend-j2h7.onrender.com", "")}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+    showToast("WhatsApp khul raha hai...");
+}
 // ---------------------------saveBudget------------------------
 function saveBudget() {
     const budget = Number(document.getElementById("budgetInput").value);
