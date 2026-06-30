@@ -2,6 +2,8 @@ let currentUser = null;
 const BASE_URL = "https://expense-tracker-backend-j2h7.onrender.com";
 window.barChartInst = null;
 window.pieChartInst = null;
+emailjs.init("xAwmgjsAcpFf9gAdh");
+
 const CHART_COLORS = [
     "#c8f135",
     "#5c9dff",
@@ -1005,7 +1007,36 @@ function downloadCSV() {
     URL.revokeObjectURL(url);
     showToast("CSV Downloaded!");
 }
-// -------------------WhatsApp Share-------------------
+// ---------------------------Email Report----------------------
+function sendEmailReport() {
+    if (!currentUser) {
+        showToast("Login first", "danger");
+        return;
+    }
+    const total = document.getElementById("statMonth")?.innerText || "0";
+    const count = document.getElementById("statCount")?.innerText || "0";
+    const highest = document.getElementById("highestCat")?.innerText || "";
+    const today = new Date();
+    const monthName = today.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+    const templateParams = {
+        to_name: currentUser.name,
+        to_email: currentUser.email,
+        month: monthName,
+        total: total,
+        count: count,
+        highest_category: highest
+    };
+    showToast("Email bhej rahe hain...");
+    emailjs.send("service_fwocbkr", "template_8itfsjc", templateParams)
+        .then(() => {
+            showToast("✅ Email bhej diya gaya!");
+        })
+        .catch((err) => {
+            console.log(err);
+            showToast("Email bhejne mein error", "danger");
+        });
+}
+// ---------------------------WhatsApp Share--------------------
 function shareWhatsApp() {
     const total = document.getElementById("statMonth")?.innerText || "0";
     const count = document.getElementById("statCount")?.innerText || "0";
