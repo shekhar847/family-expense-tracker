@@ -62,6 +62,10 @@ pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS member_name TEX
   .then(() => console.log("member_name column ready"))
   .catch(err => console.log("member_name column error:", err.message));
 
+pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS tag TEXT DEFAULT ''`)
+  .then(() => console.log("tag column ready"))
+  .catch(err => console.log("tag column error:", err.message));
+
 // -------------------Routes--------------------------
 app.get("/", (req, res) => res.send("Backend running"));
 app.get("/test-db", async (req, res) => {
