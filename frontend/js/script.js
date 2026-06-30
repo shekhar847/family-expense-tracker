@@ -375,25 +375,20 @@ function filterByMonth() {
 function filterByDateRange() {
     const startDate = document.getElementById("startDate").value;
     const endDate = document.getElementById("endDate").value;
-
     if (!startDate || !endDate) {
         showToast("Dono dates select karo", "danger");
         return;
     }
-
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59);
-
+    const [sy, sm, sd] = startDate.split("-").map(Number);
+    const [ey, em, ed] = endDate.split("-").map(Number);
+    const start = new Date(sy, sm - 1, sd);
+    const end = new Date(ey, em - 1, ed, 23, 59, 59);
     const items = document.querySelectorAll(".expense-item");
-
     items.forEach(item => {
         const dateText = item.querySelector(".expense-date")?.innerText?.trim();
         if (!dateText) return;
-
         const parts = dateText.split("/");
         const itemDate = new Date(parts[2], parts[1] - 1, parts[0]);
-
         item.style.display = (itemDate >= start && itemDate <= end) ? "" : "none";
     });
     document.getElementById("filterMonth").value = "all";
