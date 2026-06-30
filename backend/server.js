@@ -131,6 +131,27 @@ app.get("/monthly-trend/:user_id", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+// -------------------Monthly Comparison-------------------
+app.get("/monthly-comparison/:user_id", async (req, res) => {
+    try {
+        const { user_id } = req.params;
+        const result = await pool.query(
+            `SELECT 
+                category,
+                SUM(CASE WHEN date >= date_trunc('month', CURRENT_DATE) THEN amount ELSE 0 END) as this_month,
+                SUM(CASE WHEN date >= date_trunc('month', CURRENT_DATE - INTERVAL '1 month') 
+                    AND date < date_trunc('month', CURRENT_DATE) THEN amount ELSE 0 END) as last_month
+            FROM public.expenses 
+            WHERE user_id = $1 
+            GROUP BY category
+            ORDER BY this_month DESC`,
+            [user_id]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.use("/", authRoutes);
 app.use("/", expenseRoutes);
