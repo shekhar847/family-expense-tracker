@@ -290,10 +290,16 @@
                                 <option value="this">This Month</option>
                                 <option value="last">Last Month</option>
                             </select>
-                            <input type="date" id="startDate"
-                                style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text1);">
-                            <input type="date" id="endDate"
-                                style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text1);">
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <label style="font-size:11px;color:var(--text3);">From:</label>
+                                <input type="date" id="startDate"
+                                    style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text1);">
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <label style="font-size:11px;color:var(--text3);">To:</label>
+                                <input type="date" id="endDate"
+                                    style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text1);">
+                            </div>
                             <button class="btn-ghost" onclick="filterByDateRange()"
                                 style="font-size:12px;padding:6px 12px;">Apply</button>
                         </div>
