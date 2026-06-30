@@ -28,6 +28,7 @@ function showSection(id, el = null) {
         setTimeout(() => {
             loadExpenses();
             loadMonthlyTrend();
+            loadMonthlyComparison();
         }, 300);
     }
     if (id === "settingSection" && currentUser) {
@@ -595,6 +596,44 @@ async function loadMonthlyTrend() {
                 }
             }
         });
+    } catch (err) {
+        console.log(err);
+    }
+}
+// -------------------Monthly Comparison-------------------
+async function loadMonthlyComparison() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(`${BASE_URL}/monthly-comparison/${currentUser.id}`);
+        const data = await res.json();
+        const container = document.getElementById("comparisonList");
+        if (!container) return;
+        if (data.length === 0) {
+            container.innerHTML = `<p style="color:var(--text3);font-size:13px;">Koi data nahi</p>`;
+            return;
+        }
+        container.innerHTML = data.map(d => {
+            const thisMonth = Number(d.this_month);
+            const lastMonth = Number(d.last_month);
+            const diff = thisMonth - lastMonth;
+            const isUp = diff > 0;
+            const percentChange = lastMonth > 0 ? ((diff / lastMonth) * 100).toFixed(0) : (thisMonth > 0 ? 100 : 0);
+            return `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">
+                    <div>
+                        <div style="font-size:14px;font-weight:600;">${d.category}</div>
+                        <div style="font-size:11px;color:var(--text3);">This: ₹${thisMonth.toFixed(2)} | Last: ₹${lastMonth.toFixed(2)}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        ${diff !== 0 ? `
+                            <span style="font-size:13px;font-weight:700;color:${isUp ? 'var(--red)' : '#3dd9a4'};">
+                                ${isUp ? '↑' : '↓'} ${Math.abs(percentChange)}%
+                            </span>
+                        ` : `<span style="font-size:13px;color:var(--text3);">No change</span>`}
+                    </div>
+                </div>
+            `;
+        }).join("");
     } catch (err) {
         console.log(err);
     }
