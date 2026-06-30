@@ -157,6 +157,7 @@ async function addExpense() {
     const amount = document.getElementById("amount").value.trim();
     const memberName = document.getElementById("memberSelect").value;
     const notes = document.getElementById("expenseNotes").value.trim();
+    const tag = document.getElementById("expenseTag").value;
     let category = document.getElementById("category").value;
     if (category === "__custom__") {
         category = document.getElementById("customCategory").value.trim();
@@ -187,7 +188,8 @@ async function addExpense() {
                 amount,
                 category,
                 member_name: memberName,
-                notes
+                notes,
+                tag
             })
         });
         document.getElementById("title").value = "";
@@ -195,6 +197,7 @@ async function addExpense() {
         document.getElementById("category").value = "";
         document.getElementById("memberSelect").value = "Self";
         document.getElementById("expenseNotes").value = "";
+        document.getElementById("expenseTag").value = "";
         document.getElementById("customCategoryGroup").style.display = "none";
         document.getElementById("customCategory").value = "";
         showToast("Expense Added");
@@ -253,6 +256,7 @@ function renderExpenseList(data) {
             <span style="font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:10px;">
                 👤 ${e.member_name || 'Self'}
             </span>
+            ${e.tag ? `<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${e.tag === 'Urgent' ? 'var(--redbg)' : e.tag === 'Optional' ? 'var(--amberbg)' : 'var(--bluebg)'};color:${e.tag === 'Urgent' ? 'var(--red)' : e.tag === 'Optional' ? 'var(--amber)' : 'var(--blue)'};">${e.tag === 'Urgent' ? '🔴' : e.tag === 'Optional' ? '🟡' : '🔁'} ${e.tag}</span>` : ''}
             <span class="expense-date" style="font-size:11px;color:var(--text3);">
                 ${e.date ? new Date(e.date).toLocaleDateString("en-IN") : "-"}
             </span>

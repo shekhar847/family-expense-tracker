@@ -3,7 +3,7 @@ const pool = require("../db");
 // -------------------Add Expense---------------------
 const addExpense = async (req, res) => {
   try {
-    const { user_id, title, amount, category, member_name, notes } = req.body;
+    const { user_id, title, amount, category, member_name, notes, tag } = req.body;
     if (!user_id || !title || !amount) {
       return res.status(400).json({ message: "All fields required" });
     }
@@ -12,8 +12,8 @@ const addExpense = async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
     const result = await pool.query(
-      `INSERT INTO public.expenses (user_id, title, amount, category, member_name, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [user_id, title, amount, category, member_name || 'Self', notes || '']
+      `INSERT INTO public.expenses (user_id, title, amount, category, member_name, notes, tag) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [user_id, title, amount, category, member_name || 'Self', notes || '', tag || '']
     );
     res.json({ message: "Expense added successfully", expense: result.rows[0] });
   } catch (err) {
@@ -25,7 +25,7 @@ const getExpenses = async (req, res) => {
   try {
     const { user_id } = req.params;
     const result = await pool.query(
-      "SELECT id, user_id, title, amount, category, date, member_name, notes FROM public.expenses WHERE user_id = $1 ORDER BY id DESC",
+      "SELECT id, user_id, title, amount, category, date, member_name, notes, tag FROM public.expenses WHERE user_id = $1 ORDER BY id DESC"
       [user_id]
     );
     res.json(result.rows);
