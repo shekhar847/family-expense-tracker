@@ -372,6 +372,33 @@ function filterByMonth() {
         }
     });
 }
+function filterByDateRange() {
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+
+    if (!startDate || !endDate) {
+        showToast("Dono dates select karo", "danger");
+        return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59);
+
+    const items = document.querySelectorAll(".expense-item");
+
+    items.forEach(item => {
+        const dateText = item.querySelector(".expense-date")?.innerText?.trim();
+        if (!dateText) return;
+
+        const parts = dateText.split("/");
+        const itemDate = new Date(parts[2], parts[1] - 1, parts[0]);
+
+        item.style.display = (itemDate >= start && itemDate <= end) ? "" : "none";
+    });
+    document.getElementById("filterMonth").value = "all";
+    showToast("Date range filter lagaya gaya");
+}
 // ---------------------------FilterReport----------------------
 function filterReport() {
     const filter = document.getElementById("reportFilter").value;
@@ -419,11 +446,11 @@ function updateStats(data) {
         const highestCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
         const el = document.getElementById("highestCat");
         if (el) {
-            el.innerText = `🔥 Highest: ${highestCat[0]} — ₹${highestCat[1].toFixed(2)}`;
+            el.innerText = `Highest: ${highestCat[0]} — ₹${highestCat[1].toFixed(2)}`;
         }
     }
 }
-
+// ---------------------------FamilySummary---------------------
 function renderFamilySummary(data) {
     const summary = {};
     data.forEach(e => {
