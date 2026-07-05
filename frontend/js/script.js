@@ -25,6 +25,11 @@ function showSection(id, el = null) {
     if (el) {
         el.classList.add("active");
     }
+
+    // Mobile pe sidebar close karo
+    const sidebar = document.querySelector(".sidebar");
+    if (sidebar) sidebar.classList.remove("open");
+
     // -----------------------Report Open-----------------------
     if (id === "reportSection") {
         setTimeout(() => {
