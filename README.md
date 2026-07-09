@@ -77,7 +77,7 @@ Open `frontend/index.html` in your browser.
 
 ## 📸 Screenshots
 
-_Add project screenshots here._
+Coming soon...
 
 ## 👨‍💻 Author
 
