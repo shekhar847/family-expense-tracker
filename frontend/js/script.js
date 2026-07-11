@@ -1220,8 +1220,17 @@ window.addEventListener("load", () => {
         } else {
             document.getElementById("userAvatar").innerText = user.name.charAt(0).toUpperCase();
         }
+        document.getElementById("landingPage").style.display = "none";
+        document.getElementById("loginCard").style.display = "none";
+        document.getElementById("dashboardContent").style.display = "block";
         document.getElementById("sidebarUser").style.display = "block";
         document.getElementById("footerBadges").style.display = "flex";
+        loadExpenses();
+        const activeSection = localStorage.getItem("activeSection");
+        if (activeSection) {
+            const navEl = document.querySelector(`[onclick*="${activeSection}"]`);
+            showSection(activeSection, navEl);
+        }
     }
 });
 // ---------------------------Custom Category Toggle------------
@@ -1233,18 +1242,3 @@ document.getElementById("category").addEventListener("change", function () {
         customGroup.style.display = "none";
     }
 });
-
-function handleGetStarted() {
-    document.getElementById("landingPage").style.display = "none";
-    if (currentUser) {
-        document.getElementById("dashboardContent").style.display = "block";
-        loadExpenses();
-        const activeSection = localStorage.getItem("activeSection");
-        if (activeSection) {
-            const navEl = document.querySelector(`[onclick*="${activeSection}"]`);
-            showSection(activeSection, navEl);
-        }
-    } else {
-        document.getElementById("loginCard").style.display = "block";
-    }
-}
