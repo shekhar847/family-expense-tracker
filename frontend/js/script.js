@@ -25,8 +25,6 @@ function showSection(id, el = null) {
     if (el) {
         el.classList.add("active");
     }
-
-    // Mobile pe sidebar close karo
     const sidebar = document.querySelector(".sidebar");
     if (sidebar) sidebar.classList.remove("open");
 
@@ -41,7 +39,6 @@ function showSection(id, el = null) {
     if (id === "settingSection" && currentUser) {
         document.getElementById("profileName").value = currentUser.name || "";
         document.getElementById("profileEmail").value = currentUser.email || "";
-        // Budget value fill karo
         const savedBudget = localStorage.getItem("monthlyBudget");
         if (savedBudget) {
             document.getElementById("budgetInput").value = savedBudget;
@@ -1218,24 +1215,13 @@ window.addEventListener("load", () => {
         currentUser = user;
         document.getElementById("userName").innerText = user.name;
         document.getElementById("userEmail").innerText = user.email;
-
         if (user.avatar) {
             document.getElementById("userAvatar").innerHTML = `<img src="${user.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
         } else {
             document.getElementById("userAvatar").innerText = user.name.charAt(0).toUpperCase();
         }
-
-        document.getElementById("landingPage").style.display = "none";
-        document.getElementById("loginCard").style.display = "none";
-        document.getElementById("dashboardContent").style.display = "block";
         document.getElementById("sidebarUser").style.display = "block";
         document.getElementById("footerBadges").style.display = "flex";
-        loadExpenses();
-        const activeSection = localStorage.getItem("activeSection");
-        if (activeSection) {
-            const navEl = document.querySelector(`[onclick*="${activeSection}"]`);
-            showSection(activeSection, navEl);
-        }
     }
 });
 // ---------------------------Custom Category Toggle------------
@@ -1247,3 +1233,18 @@ document.getElementById("category").addEventListener("change", function () {
         customGroup.style.display = "none";
     }
 });
+
+function handleGetStarted() {
+    document.getElementById("landingPage").style.display = "none";
+    if (currentUser) {
+        document.getElementById("dashboardContent").style.display = "block";
+        loadExpenses();
+        const activeSection = localStorage.getItem("activeSection");
+        if (activeSection) {
+            const navEl = document.querySelector(`[onclick*="${activeSection}"]`);
+            showSection(activeSection, navEl);
+        }
+    } else {
+        document.getElementById("loginCard").style.display = "block";
+    }
+}
