@@ -24,11 +24,25 @@ const addExpense = async (req, res) => {
 const getExpenses = async (req, res) => {
   try {
     const { user_id } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
     const result = await pool.query(
-      "SELECT id, user_id, title, amount, category, date, member_name, notes, tag FROM public.expenses WHERE user_id = $1 ORDER BY id DESC",
+      "SELECT id, user_id, title, amount, category, date, member_name, notes, tag FROM public.expenses WHERE user_id = $1 ORDER BY id DESC LIMIT $2 OFFSET $3",
+      [user_id, limit, offset]
+    );
+    const countResult = await pool.query(
+      "SELECT COUNT(*) FROM public.expenses WHERE user_id = $1",
       [user_id]
     );
-    res.json(result.rows);
+    const total = parseInt(countResult.rows[0].count);
+    res.json({
+      expenses: result.rows,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
