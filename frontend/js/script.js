@@ -301,12 +301,63 @@ function renderRecentExpenses(data) {
 // ---------------------------Delete----------------------------
 async function deleteExpense(id) {
     if (!confirm("Are you sure you want to delete this expense?")) return;
+    
+    let undone = false;
+    
+    // Pehle expense data save karo
     try {
+        const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}`);
+        const data = await res.json();
+        const expense = data.expenses ? data.expenses.find(e => e.id === id) : data.find(e => e.id === id);
+        
+        // Delete karo
         await fetch(`${BASE_URL}/delete-expense/${id}`, { method: "DELETE" });
-        showToast("Expense Deleted", "danger");
         loadExpenses();
+        
+        // Undo toast dikhao
+        const stack = document.getElementById("toastStack");
+        const el = document.createElement("div");
+        el.className = "toast-item";
+        el.innerHTML = `
+            <div class="toast-dot danger"></div>
+            <span>Expense deleted</span>
+            <button onclick="undoDelete(${JSON.stringify(expense).replace(/"/g, '&quot;')}, this.parentElement)" 
+                style="margin-left:10px;background:var(--accent);border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;color:#111;font-weight:600;">
+                Undo
+            </button>
+        `;
+        stack.appendChild(el);
+        
+        setTimeout(() => {
+            if (el.parentElement) el.remove();
+        }, 5000);
+        
     } catch (err) {
         console.log(err);
+        showToast("Error deleting", "danger");
+    }
+}
+
+async function undoDelete(expense, toastEl) {
+    try {
+        await fetch(`${BASE_URL}/add-expense`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                title: expense.title,
+                amount: expense.amount,
+                category: expense.category,
+                member_name: expense.member_name,
+                notes: expense.notes,
+                tag: expense.tag
+            })
+        });
+        if (toastEl) toastEl.remove();
+        showToast("✅ Expense restored!");
+        loadExpenses();
+    } catch (err) {
+        showToast("Error restoring", "danger");
     }
 }
 // ---------------------------Edit------------------------------
