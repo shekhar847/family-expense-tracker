@@ -216,8 +216,12 @@ async function addExpense() {
 async function loadExpenses() {
     try {
         document.getElementById("loadingSpinner").style.display = "block";
-        const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}`);
-        const data = await res.json();
+        const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}?page=1&limit=100`);
+        const response = await res.json();
+        
+        // Pagination response handle karo
+        const data = response.expenses || response;
+        
         document.getElementById("loadingSpinner").style.display = "none";
         renderExpenseList(data);
         updateStats(data);
