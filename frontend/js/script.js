@@ -844,9 +844,8 @@ async function changePassword() {
 function toggleTheme() {
     document.body.classList.toggle('light');
     const isDark = !document.body.classList.contains('light');
-    const btn = document.querySelector('.theme-toggle');
+    const btn = document.querySelector('.theme-toggle[onclick*="toggleTheme"]');
     if (btn) btn.textContent = isDark ? '☀' : '🌙';
-    // Theme save karo
     localStorage.setItem("theme", isDark ? "dark" : "light");
 }
 // ---------------------------Voice Assistant-------------------
