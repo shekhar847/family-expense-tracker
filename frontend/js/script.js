@@ -4,6 +4,8 @@ window.barChartInst = null;
 window.pieChartInst = null;
 emailjs.init("xAwmgjsAcpFf9gAdh");
 
+let allExpensesData = [];
+
 const CHART_COLORS = [
     "#c8f135",
     "#5c9dff",
@@ -221,6 +223,7 @@ async function loadExpenses() {
         
         // Pagination response handle karo
         const data = response.expenses || response;
+        allExpensesData = data;
         
         document.getElementById("loadingSpinner").style.display = "none";
         renderExpenseList(data);
@@ -305,16 +308,10 @@ function renderRecentExpenses(data) {
 // ---------------------------Delete----------------------------
 async function deleteExpense(id) {
     if (!confirm("Are you sure you want to delete this expense?")) return;
-    
+
     try {
-        // Expense data DOM se nikalo
-        const expenseItem = document.querySelector(`[onclick*="deleteExpense(${id})"]`).closest(".expense-item");
-        const title = expenseItem.querySelector(".expense-title")?.innerText || "";
-        const amount = expenseItem.querySelector(".expense-amount")?.innerText?.replace("₹", "") || "0";
-        const category = expenseItem.querySelector(".expense-cat-badge")?.innerText || "";
-        const memberName = expenseItem.querySelector(".member-badge")?.innerText || "Self";
-        
-        const expense = { title, amount, category, member_name: memberName };
+        // Data allExpensesData se nikalo
+        const expense = allExpensesData.find(e => e.id === id);
 
         // Delete karo
         await fetch(`${BASE_URL}/delete-expense/${id}`, { method: "DELETE" });
