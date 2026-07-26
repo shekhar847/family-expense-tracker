@@ -310,21 +310,21 @@ async function deleteExpense(id) {
     if (!confirm("Are you sure you want to delete this expense?")) return;
 
     try {
-        // Data allExpensesData se nikalo
         const expense = allExpensesData.find(e => e.id === id);
+        
+        // Global mein store karo
+        window.lastDeletedExpense = expense;
 
-        // Delete karo
         await fetch(`${BASE_URL}/delete-expense/${id}`, { method: "DELETE" });
         loadExpenses();
 
-        // Undo toast dikhao
         const stack = document.getElementById("toastStack");
         const el = document.createElement("div");
         el.className = "toast-item";
         el.innerHTML = `
             <div class="toast-dot danger"></div>
             <span>Expense deleted</span>
-            <button onclick="undoDelete(${JSON.stringify(expense).replace(/"/g, '&quot;')}, this.parentElement)"
+            <button onclick="undoDelete(window.lastDeletedExpense, this.parentElement)"
                 style="margin-left:10px;background:var(--accent);border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;color:#111;font-weight:600;">
                 Undo
             </button>
