@@ -1,12 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const cloudinary = require("cloudinary").v2;
+const { OAuth2Client } = require("google-auth-library");
 const pool = require("./db");
-
 const authRoutes = require("./routes/authRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 
 const app = express();
+const googleClient = new OAuth2Client("716678461904-1kul91j20k4v9jql1e1ao88p8ev1acg9.apps.googleusercontent.com");
 
 // -------------------Cloudinary Config---------------
 cloudinary.config({
@@ -24,6 +25,40 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// -------------------Google Login-------------------
+app.post("/google-login", async (req, res) => {
+    try {
+        const { credential } = req.body;
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: "716678461904-1kul91j20k4v9jql1e1ao88p8ev1acg9.apps.googleusercontent.com"
+        });
+        const payload = ticket.getPayload();
+        const { name, email, picture } = payload;
+
+        // User check karo ya banao
+        let userResult = await pool.query(
+            "SELECT * FROM public.users WHERE email = $1", [email]
+        );
+
+        if (userResult.rows.length === 0) {
+            // Naya user banao
+            userResult = await pool.query(
+                "INSERT INTO public.users (name, email, password, avatar) VALUES ($1, $2, $3, $4) RETURNING *",
+                [name, email, "google-oauth", picture]
+            );
+        }
+
+        const user = userResult.rows[0];
+        res.json({
+            message: "Google Login successful",
+            user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar || picture }
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Google Login failed", error: err.message });
+    }
+});
 // -------------------Create Tables-------------------
 pool.query(`CREATE TABLE IF NOT EXISTS public.users (
   id SERIAL PRIMARY KEY, name TEXT, email TEXT UNIQUE, password TEXT
