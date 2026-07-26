@@ -308,16 +308,11 @@ function renderRecentExpenses(data) {
 // ---------------------------Delete----------------------------
 async function deleteExpense(id) {
     if (!confirm("Are you sure you want to delete this expense?")) return;
-
     try {
         const expense = allExpensesData.find(e => e.id === id);
-        
-        // Global mein store karo
         window.lastDeletedExpense = expense;
-
         await fetch(`${BASE_URL}/delete-expense/${id}`, { method: "DELETE" });
         loadExpenses();
-
         const stack = document.getElementById("toastStack");
         const el = document.createElement("div");
         el.className = "toast-item";
@@ -330,14 +325,40 @@ async function deleteExpense(id) {
             </button>
         `;
         stack.appendChild(el);
-
         setTimeout(() => {
             if (el.parentElement) el.remove();
         }, 5000);
-
     } catch (err) {
         console.log(err);
         showToast("Error deleting", "danger");
+    }
+}
+// ---------------------------undoDelete----------------------------
+async function undoDelete(expense, toastEl) {
+    try {
+        if (!expense) {
+            showToast("Undo failed", "danger");
+            return;
+        }
+        await fetch(`${BASE_URL}/add-expense`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                title: expense.title,
+                amount: expense.amount,
+                category: expense.category,
+                member_name: expense.member_name || "Self",
+                notes: expense.notes || "",
+                tag: expense.tag || ""
+            })
+        });
+        if (toastEl) toastEl.remove();
+        showToast("✅ Expense restored!");
+        loadExpenses();
+    } catch (err) {
+        console.log(err);
+        showToast("Error restoring", "danger");
     }
 }
 // ---------------------------Edit------------------------------
