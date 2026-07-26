@@ -105,6 +105,49 @@ async function loginUser() {
         showToast("Server Error", "danger");
     }
 }
+// ---------------------------handleGoogleLogin-----------------------
+async function handleGoogleLogin(response) {
+    try {
+        document.getElementById("loginCard").style.display = "none";
+        document.getElementById("loadingSpinner").style.display = "block";
+
+        // Google token backend pe send karo
+        const res = await fetch(`${BASE_URL}/google-login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ credential: response.credential })
+        });
+
+        const data = await res.json();
+        document.getElementById("loadingSpinner").style.display = "none";
+
+        if (data.user) {
+            currentUser = data.user;
+            localStorage.setItem("currentUser", JSON.stringify(data.user));
+            document.getElementById("userName").innerText = data.user.name;
+            document.getElementById("userEmail").innerText = data.user.email;
+            if (data.user.avatar) {
+                document.getElementById("userAvatar").innerHTML = `<img src="${data.user.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            } else {
+                document.getElementById("userAvatar").innerText = data.user.name.charAt(0).toUpperCase();
+            }
+            document.getElementById("loginCard").style.display = "none";
+            document.getElementById("dashboardContent").style.display = "block";
+            document.getElementById("sidebarUser").style.display = "block";
+            document.getElementById("footerBadges").style.display = "flex";
+            showToast("✅ Google Login Successful!");
+            loadExpenses();
+        } else {
+            document.getElementById("loginCard").style.display = "block";
+            showToast(data.message || "Google Login Failed", "danger");
+        }
+    } catch (err) {
+        document.getElementById("loadingSpinner").style.display = "none";
+        document.getElementById("loginCard").style.display = "block";
+        showToast("Server Error", "danger");
+        console.log(err);
+    }
+}
 // ---------------------------Register--------------------------
 async function registerUser() {
     try {
