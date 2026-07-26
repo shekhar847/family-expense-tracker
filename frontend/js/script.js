@@ -844,7 +844,7 @@ async function changePassword() {
 function toggleTheme() {
     document.body.classList.toggle('light');
     const isDark = !document.body.classList.contains('light');
-    const btn = document.querySelector('.theme-toggle[onclick*="toggleTheme"]');
+    const btn = document.getElementById("themeBtn");
     if (btn) btn.textContent = isDark ? '☀' : '🌙';
     localStorage.setItem("theme", isDark ? "dark" : "light");
 }
@@ -1309,7 +1309,7 @@ window.addEventListener("load", () => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") {
         document.body.classList.add("light");
-        const btn = document.querySelector('.theme-toggle[onclick*="toggleTheme"]');
+        const btn = document.getElementById("themeBtn");
         if (btn) btn.textContent = '🌙';
     }
     const saved = localStorage.getItem("currentUser");
