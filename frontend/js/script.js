@@ -1310,7 +1310,7 @@ window.addEventListener("load", () => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") {
         document.body.classList.add("light");
-        const btn = document.querySelector('.theme-toggle');
+        const btn = document.querySelector('.theme-toggle[onclick*="toggleTheme"]');
         if (btn) btn.textContent = '🌙';
     }
     const saved = localStorage.getItem("currentUser");
