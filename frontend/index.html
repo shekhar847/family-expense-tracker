@@ -14,6 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -125,6 +126,21 @@
                                 <input type="password" id="password" placeholder="••••••••">
                             </div>
                             <button class="btn-primary-custom" style="width:100%;margin-top:8px;" onclick="loginUser()"> Sign in →</button>
+                            <div style="margin-top:12px;text-align:center;">
+                                <div id="g_id_onload"
+                                    data-client_id="716678461904-1kul91j20k4v9jql1e1ao88p8ev1acg9.apps.googleusercontent.com"
+                                    data-callback="handleGoogleLogin"
+                                    data-auto_prompt="false">
+                                </div>
+                                <div class="g_id_signin"
+                                    data-type="standard"
+                                    data-size="large"
+                                    data-theme="filled_black"
+                                    data-text="sign_in_with"
+                                    data-shape="rectangular"
+                                    data-logo_alignment="left">
+                                </div>
+                            </div>
                             <button class="btn-primary-custom" style="width:100%;margin-top:8px;" onclick="showRegisterForm()"> New user? Register →</button>
                             <div id="loginStatus" style="margin-top:12px;font-size:12.5px;text-align:center;color:var(--red);"></div>
                         </div>
