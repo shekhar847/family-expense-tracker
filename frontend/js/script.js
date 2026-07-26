@@ -4,6 +4,8 @@ window.barChartInst = null;
 window.pieChartInst = null;
 emailjs.init("xAwmgjsAcpFf9gAdh");
 
+let allExpensesData = [];
+
 const CHART_COLORS = [
     "#c8f135",
     "#5c9dff",
@@ -101,6 +103,49 @@ async function loginUser() {
         document.getElementById("loginCard").style.display = "block";
         console.log(err);
         showToast("Server Error", "danger");
+    }
+}
+// ---------------------------handleGoogleLogin-----------------------
+async function handleGoogleLogin(response) {
+    try {
+        document.getElementById("loginCard").style.display = "none";
+        document.getElementById("loadingSpinner").style.display = "block";
+
+        // Google token backend pe send karo
+        const res = await fetch(`${BASE_URL}/google-login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ credential: response.credential })
+        });
+
+        const data = await res.json();
+        document.getElementById("loadingSpinner").style.display = "none";
+
+        if (data.user) {
+            currentUser = data.user;
+            localStorage.setItem("currentUser", JSON.stringify(data.user));
+            document.getElementById("userName").innerText = data.user.name;
+            document.getElementById("userEmail").innerText = data.user.email;
+            if (data.user.avatar) {
+                document.getElementById("userAvatar").innerHTML = `<img src="${data.user.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            } else {
+                document.getElementById("userAvatar").innerText = data.user.name.charAt(0).toUpperCase();
+            }
+            document.getElementById("loginCard").style.display = "none";
+            document.getElementById("dashboardContent").style.display = "block";
+            document.getElementById("sidebarUser").style.display = "block";
+            document.getElementById("footerBadges").style.display = "flex";
+            showToast("✅ Google Login Successful!");
+            loadExpenses();
+        } else {
+            document.getElementById("loginCard").style.display = "block";
+            showToast(data.message || "Google Login Failed", "danger");
+        }
+    } catch (err) {
+        document.getElementById("loadingSpinner").style.display = "none";
+        document.getElementById("loginCard").style.display = "block";
+        showToast("Server Error", "danger");
+        console.log(err);
     }
 }
 // ---------------------------Register--------------------------
@@ -216,8 +261,13 @@ async function addExpense() {
 async function loadExpenses() {
     try {
         document.getElementById("loadingSpinner").style.display = "block";
-        const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}`);
-        const data = await res.json();
+        const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}?page=1&limit=100`);
+        const response = await res.json();
+        
+        // Pagination response handle karo
+        const data = response.expenses || response;
+        allExpensesData = data;
+        
         document.getElementById("loadingSpinner").style.display = "none";
         renderExpenseList(data);
         updateStats(data);
@@ -302,11 +352,56 @@ function renderRecentExpenses(data) {
 async function deleteExpense(id) {
     if (!confirm("Are you sure you want to delete this expense?")) return;
     try {
+        const expense = allExpensesData.find(e => e.id === id);
+        window.lastDeletedExpense = expense;
         await fetch(`${BASE_URL}/delete-expense/${id}`, { method: "DELETE" });
-        showToast("Expense Deleted", "danger");
+        loadExpenses();
+        const stack = document.getElementById("toastStack");
+        const el = document.createElement("div");
+        el.className = "toast-item";
+        el.innerHTML = `
+            <div class="toast-dot danger"></div>
+            <span>Expense deleted</span>
+            <button onclick="undoDelete(window.lastDeletedExpense, this.parentElement)"
+                style="margin-left:10px;background:var(--accent);border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;color:#111;font-weight:600;">
+                Undo
+            </button>
+        `;
+        stack.appendChild(el);
+        setTimeout(() => {
+            if (el.parentElement) el.remove();
+        }, 5000);
+    } catch (err) {
+        console.log(err);
+        showToast("Error deleting", "danger");
+    }
+}
+// ---------------------------undoDelete----------------------------
+async function undoDelete(expense, toastEl) {
+    try {
+        if (!expense) {
+            showToast("Undo failed", "danger");
+            return;
+        }
+        await fetch(`${BASE_URL}/add-expense`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                title: expense.title,
+                amount: expense.amount,
+                category: expense.category,
+                member_name: expense.member_name || "Self",
+                notes: expense.notes || "",
+                tag: expense.tag || ""
+            })
+        });
+        if (toastEl) toastEl.remove();
+        showToast("✅ Expense restored!");
         loadExpenses();
     } catch (err) {
         console.log(err);
+        showToast("Error restoring", "danger");
     }
 }
 // ---------------------------Edit------------------------------
@@ -1220,8 +1315,17 @@ window.addEventListener("load", () => {
         } else {
             document.getElementById("userAvatar").innerText = user.name.charAt(0).toUpperCase();
         }
+        document.getElementById("landingPage").style.display = "none";
+        document.getElementById("loginCard").style.display = "none";
+        document.getElementById("dashboardContent").style.display = "block";
         document.getElementById("sidebarUser").style.display = "block";
         document.getElementById("footerBadges").style.display = "flex";
+        loadExpenses();
+        const activeSection = localStorage.getItem("activeSection");
+        if (activeSection) {
+            const navEl = document.querySelector(`[onclick*="${activeSection}"]`);
+            showSection(activeSection, navEl);
+        }
     }
 });
 // ---------------------------Custom Category Toggle------------
@@ -1233,18 +1337,3 @@ document.getElementById("category").addEventListener("change", function () {
         customGroup.style.display = "none";
     }
 });
-
-function handleGetStarted() {
-    document.getElementById("landingPage").style.display = "none";
-    if (currentUser) {
-        document.getElementById("dashboardContent").style.display = "block";
-        loadExpenses();
-        const activeSection = localStorage.getItem("activeSection");
-        if (activeSection) {
-            const navEl = document.querySelector(`[onclick*="${activeSection}"]`);
-            showSection(activeSection, navEl);
-        }
-    } else {
-        document.getElementById("loginCard").style.display = "block";
-    }
-}
