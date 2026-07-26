@@ -846,6 +846,8 @@ function toggleTheme() {
     const isDark = !document.body.classList.contains('light');
     const btn = document.querySelector('.theme-toggle');
     if (btn) btn.textContent = isDark ? '☀' : '🌙';
+    // Theme save karo
+    localStorage.setItem("theme", isDark ? "dark" : "light");
 }
 // ---------------------------Voice Assistant-------------------
 function startVoice() {
@@ -1304,6 +1306,13 @@ async function uploadAvatar() {
 }
 // ---------------------------Page load pe check karo-----------
 window.addEventListener("load", () => {
+    // Theme load karo
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light") {
+        document.body.classList.add("light");
+        const btn = document.querySelector('.theme-toggle');
+        if (btn) btn.textContent = '🌙';
+    }
     const saved = localStorage.getItem("currentUser");
     if (saved) {
         const user = JSON.parse(saved);
