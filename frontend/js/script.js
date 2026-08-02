@@ -189,6 +189,8 @@ function logout() {
     localStorage.removeItem("currentUser");
     document.getElementById("userName").innerText = "Guest User";
     document.getElementById("userEmail").innerText = "Not logged in";
+    document.getElementById("email").value = "";
+    document.getElementById("password").value = "";
     document.getElementById("userAvatar").innerText = "?";
     document.getElementById("dashboardContent").style.display = "none";
     document.getElementById("landingPage").style.display = "block";
