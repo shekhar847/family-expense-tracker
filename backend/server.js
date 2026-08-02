@@ -7,6 +7,10 @@ const authRoutes = require("./routes/authRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 const bcrypt = require('bcryptjs');
 
+// ------------------- Gemini AI Setup -------------------
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
 const app = express();
 const googleClient = new OAuth2Client("716678461904-1kul91j20k4v9jql1e1ao88p8ev1acg9.apps.googleusercontent.com");
 
@@ -220,190 +224,60 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
     }
 });
 
-// ------------------- Receipt Scan Route (PDF & Image Handling) -------------------
+// ------------------- Gemini-Powered Receipt Scan Route (PDF & Images) -------------------
 app.post("/scan-receipt", async (req, res) => {
     try {
         const { image_data, media_type } = req.body;
         if (!image_data) {
-            return res.status(400).json({ error: "Image/PDF data missing" });
+            return res.status(400).json({ error: "Image or PDF data missing" });
         }
 
-        const apiKey = process.env.OPENROUTER_API_KEY;
-        if (!apiKey) {
-            return res.status(500).json({ error: "OPENROUTER_API_KEY missing in server environment variables" });
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({ error: "GEMINI_API_KEY missing in server environment variables" });
         }
 
-        // 1. PDF Detection
-        const isPdf = media_type === "application/pdf" || 
-                      image_data.startsWith("data:application/pdf") || 
-                      image_data.startsWith("JVBERi0");
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        if (isPdf) {
-            console.log("📄 Processing PDF Document...");
-            
-            // Extract text from base64 PDF
-            const cleanBase64 = image_data.replace(/^data:application\/pdf;base64,/, "");
-            const pdfBuffer = Buffer.from(cleanBase64, 'base64').toString('binary');
-            
-            const extractedTextMatches = pdfBuffer.match(/\(([^)]+)\)/g);
-            let extractedText = "";
-            if (extractedTextMatches) {
-                extractedText = extractedTextMatches.map(t => t.replace(/[()]/g, '')).join(" ");
+        // Base64 cleaning and MIME detection
+        const cleanBase64 = image_data.replace(/^data:(.*);base64,/, "");
+        
+        // Auto-detect PDF or fallback to passed media_type or image/jpeg
+        let mimeType = media_type || "image/jpeg";
+        if (image_data.startsWith("data:application/pdf") || image_data.startsWith("JVBERi0")) {
+            mimeType = "application/pdf";
+        }
+
+        console.log(`📄 Scanning document with Gemini (Type: ${mimeType})...`);
+
+        const prompt = `Analyze this expense receipt or document and respond ONLY in valid JSON format with no markdown formatting or extra text:
+        {
+          "title": "item or store name (max 30 chars)",
+          "amount": "total amount as number only",
+          "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other",
+          "notes": "brief description (max 50 chars)"
+        }`;
+
+        const documentPart = {
+            inlineData: {
+                data: cleanBase64,
+                mimeType: mimeType
             }
+        };
 
-            if (!extractedText || extractedText.length < 5) {
-                extractedText = pdfBuffer.replace(/[^\x20-\x7E]/g, ' ');
-            }
+        const result = await model.generateContent([prompt, documentPart]);
+        const responseText = result.response.text();
 
-            // Reliable Active Free Text Models on OpenRouter (Excludes Llama-3.3-70b)
-            const pdfModels = [
-                "meta-llama/llama-3.1-8b-instruct:free",
-                "qwen/qwen-2.5-7b-instruct:free",
-                "google/gemma-2-9b-it:free",
-                "mistralai/mistral-7b-instruct:free",
-                "deepseek/deepseek-r1:free"
-            ];
+        // Robust JSON extraction
+        const cleanedJson = responseText.replace(/```json|```/g, "").trim();
+        const firstBrace = cleanedJson.indexOf("{");
+        const lastBrace = cleanedJson.lastIndexOf("}");
 
-            let pdfSuccess = false;
-            let pdfParsedData = null;
-
-            for (const textModel of pdfModels) {
-                try {
-                    console.log(`Trying PDF Text Model: ${textModel}`);
-                    const textResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                        method: "POST",
-                        headers: {
-                            "Authorization": `Bearer ${apiKey}`,
-                            "Content-Type": "application/json",
-                            "HTTP-Referer": "https://expense-tracker-backend-j2h7.onrender.com",
-                            "X-Title": "Expense Tracker"
-                        },
-                        body: JSON.stringify({
-                            model: textModel,
-                            messages: [
-                                {
-                                    role: "user",
-                                    content: `Analyze this text extracted from an expense receipt or PDF report and respond ONLY in valid JSON format without markdown formatting:
-                                    { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }
-                                    
-                                    PDF Content:
-                                    ${extractedText.substring(0, 4000)}`
-                                }
-                            ],
-                            temperature: 0.1
-                        })
-                    });
-
-                    const textData = await textResponse.json();
-
-                    if (textResponse.ok && textData.choices && textData.choices[0]?.message?.content) {
-                        const rawContent = textData.choices[0].message.content;
-                        const cleanedJson = rawContent.replace(/```json|```/g, "").trim();
-                        
-                        // Parse JSON safely
-                        const firstBrace = cleanedJson.indexOf("{");
-                        const lastBrace = cleanedJson.lastIndexOf("}");
-                        if (firstBrace !== -1 && lastBrace !== -1) {
-                            const jsonSubstring = cleanedJson.substring(firstBrace, lastBrace + 1);
-                            pdfParsedData = JSON.parse(jsonSubstring);
-                            pdfSuccess = true;
-                            console.log(`✅ PDF Parsed Successfully using ${textModel}`);
-                            break;
-                        }
-                    } else {
-                        console.log(`⚠️ PDF Text Model ${textModel} failed:`, textData.error?.message || "No valid response");
-                    }
-                } catch (err) {
-                    console.log(`⚠️ Error with PDF Model ${textModel}:`, err.message);
-                }
-            }
-
-            if (pdfSuccess && pdfParsedData) {
-                return res.json(pdfParsedData);
-            } else {
-                return res.status(400).json({ error: "Failed to extract receipt data from PDF with available free models." });
-            }
-
-        } else {
-            // 2. Image Processing (JPG/PNG)
-            console.log("🖼️ Processing Image Document...");
-            const mimeType = media_type || "image/jpeg";
-            const base64Data = image_data.startsWith("data:") 
-                ? image_data 
-                : `data:${mimeType};base64,${image_data}`;
-
-            // Currently active free vision models
-            const visionModels = [
-                "qwen/qwen-2.5-vl-72b-instruct:free",
-                "meta-llama/llama-3.2-11b-vision-instruct:free",
-                "google/gemma-3-27b-it:free",
-                "google/gemma-3-12b-it:free",
-                "mistralai/pixtral-12b:free"
-            ];
-
-            let responseData = null;
-            let isSuccess = false;
-
-            for (const model of visionModels) {
-                try {
-                    console.log(`Trying Image Vision Model: ${model}`);
-                    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                        method: "POST",
-                        headers: {
-                            "Authorization": `Bearer ${apiKey}`,
-                            "Content-Type": "application/json",
-                            "HTTP-Referer": "https://expense-tracker-backend-j2h7.onrender.com",
-                            "X-Title": "Expense Tracker"
-                        },
-                        body: JSON.stringify({
-                            model: model,
-                            messages: [
-                                {
-                                    role: "user",
-                                    content: [
-                                        {
-                                            type: "text",
-                                            text: `Analyze this receipt image and respond ONLY in valid JSON format without markdown code blocks:
-                                            { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }`
-                                        },
-                                        {
-                                            type: "image_url",
-                                            image_url: { url: base64Data }
-                                        }
-                                    ]
-                                }
-                            ],
-                            temperature: 0.1
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.choices && data.choices[0]?.message?.content) {
-                        responseData = data;
-                        isSuccess = true;
-                        console.log(`✅ Image Scan successful using model: ${model}`);
-                        break;
-                    } else {
-                        console.log(`⚠️ Vision Model ${model} failed:`, data.error?.message || "No valid response");
-                    }
-                } catch (err) {
-                    console.log(`⚠️ Model ${model} failed:`, err.message);
-                }
-            }
-
-            if (!isSuccess || !responseData) {
-                return res.status(400).json({ error: "All free vision models are currently busy or unavailable. Please try again in a few moments." });
-            }
-
-            const rawContent = responseData.choices[0].message.content;
-            const cleanedJson = rawContent.replace(/```json|```/g, "").trim();
-            const firstBrace = cleanedJson.indexOf("{");
-            const lastBrace = cleanedJson.lastIndexOf("}");
-            const jsonSubstring = cleanedJson.substring(firstBrace, lastBrace + 1);
-            const parsed = JSON.parse(jsonSubstring);
-            
+        if (firstBrace !== -1 && lastBrace !== -1) {
+            const parsed = JSON.parse(cleanedJson.substring(firstBrace, lastBrace + 1));
+            console.log("✅ Receipt parsed successfully with Gemini!");
             return res.json(parsed);
+        } else {
+            throw new Error("Could not parse valid JSON from AI response");
         }
 
     } catch (err) {
@@ -411,6 +285,7 @@ app.post("/scan-receipt", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 app.use("/", authRoutes);
 app.use("/", expenseRoutes);
 
