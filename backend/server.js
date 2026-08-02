@@ -5,6 +5,7 @@ const { OAuth2Client } = require("google-auth-library");
 const pool = require("./db");
 const authRoutes = require("./routes/authRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
+const bcrypt = require('bcrypt');
 
 const app = express();
 const googleClient = new OAuth2Client("716678461904-1kul91j20k4v9jql1e1ao88p8ev1acg9.apps.googleusercontent.com");
@@ -101,7 +102,7 @@ pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS tag TEXT DEFAUL
   .then(() => console.log("tag column ready"))
   .catch(err => console.log("tag column error:", err.message));
 
-// -------------------Reset Password-------------------
+// -------------------Reset Password API-------------------
 app.post("/reset-password", async (req, res) => {
     try {
         const { email, new_password } = req.body;
@@ -109,23 +110,23 @@ app.post("/reset-password", async (req, res) => {
             return res.status(400).json({ message: "All fields required" });
         }
         const userResult = await pool.query(
-            "SELECT * FROM public.users WHERE email = $1", [email.trim().toLowerCase()]
+            "SELECT * FROM public.users WHERE email = $1", 
+            [email.trim().toLowerCase()]
         );
         if (userResult.rows.length === 0) {
             return res.status(400).json({ message: "Email not found" });
-        }
+        }        
         const hashedPassword = await bcrypt.hash(new_password, 10);
         await pool.query(
             "UPDATE public.users SET password = $1 WHERE email = $2",
             [hashedPassword, email.trim().toLowerCase()]
-        );
+        );        
         res.json({ message: "Password reset successful" });
     } catch (err) {
-        console.error("RESET PASSWORD ERROR:", err);
+        console.error("SERVER RESET ERROR:", err);
         res.status(500).json({ error: err.message });
     }
 });
-
 // -------------------Routes--------------------------
 app.get("/", (req, res) => res.send("Backend running"));
 app.get("/test-db", async (req, res) => {
