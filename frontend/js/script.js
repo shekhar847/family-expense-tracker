@@ -110,10 +110,10 @@ function togglePassword(id, btn) {
     const input = document.getElementById(id);
     if (input.type === "password") {
         input.type = "text";
-        btn.textContent = "🙈";
+        btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
     } else {
         input.type = "password";
-        btn.textContent = "👁";
+        btn.innerHTML = '<i class="fa-solid fa-eye"></i>';
     }
 }
 // ---------------------------handleGoogleLogin-----------------------
