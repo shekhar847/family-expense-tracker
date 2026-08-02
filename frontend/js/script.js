@@ -107,7 +107,7 @@ async function loginUser() {
 }
 // -------------------Forgot Password-------------------
 let resetCodeStore = "";
-let storedEmail = ""; // ईमेल को सेफ रखने के लिए वेरिएबल
+let storedEmail = "";
 
 function showForgotPassword(show = true) {
     document.getElementById("loginCard").style.display = show ? "none" : "block";
@@ -125,7 +125,7 @@ async function sendResetCode() {
         return;
     }
     
-    storedEmail = email; // ईमेल यहाँ सेव हो जाएगा
+    storedEmail = email;ा
     
     // 6 digit random code generate karo
     resetCodeStore = Math.floor(100000 + Math.random() * 900000).toString();
@@ -150,7 +150,7 @@ async function sendResetCode() {
 async function verifyResetCode() {
     const code = document.getElementById("resetCode").value.trim();
     const newPassword = document.getElementById("newResetPassword").value.trim();
-    const email = storedEmail; // सेव किया हुआ ईमेल इस्तेमाल होगा
+    const email = storedEmail;
 
     if (!code || !newPassword) {
         showToast("Please fill in all fields", "danger");
