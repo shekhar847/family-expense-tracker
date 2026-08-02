@@ -445,17 +445,17 @@ async function addExpense() {
     }
 }
 // -------------------Receipt Scan-------------------
-window.scanReceipt = async function() {
-    const fileInput = document.getElementById("receiptInput"); 
-    if (!fileInput || !fileInput.files[0]) {
-        alert("कृपया पहले रसीद की फोटो सेलेक्ट करें!");
+async function scanReceipt(input) {
+    if (!input || !input.files || !input.files[0]) {
         return;
     }
-    const file = fileInput.files[0];
+
+    const file = input.files[0];
     const reader = new FileReader();
+    
     reader.onload = async function(e) {
         const base64String = e.target.result.split(',')[1];
-        const mediaType = file.type;
+        const mediaType = file.type || "image/jpeg";
         try {
             const res = await fetch(`${BASE_URL}/scan-receipt`, {
                 method: "POST",
@@ -465,25 +465,34 @@ window.scanReceipt = async function() {
                     media_type: mediaType 
                 })
             });
+
             const data = await res.json();
+
             if (res.ok) {
-                if(document.getElementById("expenseTitle")) document.getElementById("expenseTitle").value = data.title || "";
-                if(document.getElementById("expenseAmount")) document.getElementById("expenseAmount").value = data.amount || "";
-                if(document.getElementById("expenseCategory")) document.getElementById("expenseCategory").value = data.category || "Other";
-                if(document.getElementById("expenseNotes")) document.getElementById("expenseNotes").value = data.notes || "";
-                
+                const titleInput = document.getElementById("title") || document.getElementById("expenseTitle");
+                const amountInput = document.getElementById("amount") || document.getElementById("expenseAmount");
+                const categoryInput = document.getElementById("category") || document.getElementById("expenseCategory");
+                const descInput = document.getElementById("description") || document.getElementById("expenseNotes");
+
+                if (titleInput) titleInput.value = data.title || "";
+                if (amountInput) amountInput.value = data.amount || "";
+                if (categoryInput) categoryInput.value = data.category || "Other";
+                if (descInput) descInput.value = data.notes || "";
+
                 alert("✅ Receipt scanned successfully!");
             } else {
                 alert("Receipt scan nahi ho saka — manually bharo");
             }
         } catch (err) {
-            console.error(err);
+            console.error("Scan Error:", err);
             alert("Receipt scan nahi ho saka — manually bharo");
+        } finally {
+            input.value = "";
         }
     };
 
     reader.readAsDataURL(file);
-};
+}
 // ---------------------------Load Expense----------------------
 async function loadExpenses() {
     try {
