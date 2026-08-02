@@ -445,75 +445,45 @@ async function addExpense() {
     }
 }
 // -------------------Receipt Scan-------------------
-async function scanReceipt(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    showToast("Receipt scan ho rahi hai... ⏳");
-
-    // Image ko base64 mein convert karo
-    const base64 = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(",")[1]);
-        reader.readAsDataURL(file);
-    });
-
-    try {
-        const response = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                model: "claude-sonnet-4-6",
-                max_tokens: 1000,
-                messages: [{
-                    role: "user",
-                    content: [
-                        {
-                            type: "image",
-                            source: {
-                                type: "base64",
-                                media_type: file.type,
-                                data: base64
-                            }
-                        },
-                        {
-                            type: "text",
-                            text: `Analyze this receipt image and extract the following information. Respond ONLY in this exact JSON format with no other text:
-                            {
-                              "title": "item or store name (short, max 30 chars)",
-                              "amount": "total amount as number only (no currency symbol)",
-                              "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other",
-                              "notes": "brief description (max 50 chars)"
-                            }
-                            If you cannot read the receipt clearly, use your best guess.`
-                        }
-                    ]
-                }]
-            })
-        });
-
-        const data = await response.json();
-        const text = data.content[0].text;
-        const parsed = JSON.parse(text);
-
-        // Form fill karo
-        if (parsed.title) document.getElementById("title").value = parsed.title;
-        if (parsed.amount) document.getElementById("amount").value = parsed.amount;
-        if (parsed.category) document.getElementById("category").value = parsed.category;
-        if (parsed.notes) document.getElementById("expenseNotes").value = parsed.notes;
-
-        showToast("✅ Receipt scan ho gaya — check karo!");
-
-    } catch (err) {
-        console.log(err);
-        showToast("Receipt scan nahi ho saka — manually bharo", "danger");
+window.scanReceipt = async function() {
+    const fileInput = document.getElementById("receiptInput");
+    if (!fileInput || !fileInput.files[0]) {
+        alert("Please select an image first");
+        return;
     }
 
-    // Input reset karo
-    input.value = "";
-}
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = async function(e) {
+        const base64String = e.target.result.split(',')[1];
+        const mediaType = file.type;
+
+        try {
+            const res = await fetch(`${BASE_URL}/scan-receipt`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image_data: base64String, media_type: mediaType })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                document.getElementById("expenseTitle").value = data.title || "";
+                document.getElementById("expenseAmount").value = data.amount || "";
+                document.getElementById("expenseCategory").value = data.category || "Other";
+                document.getElementById("expenseNotes").value = data.notes || "";
+                alert("Receipt scanned successfully!");
+            } else {
+                alert("Receipt scan nahi ho saka — manually bharo");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Receipt scan nahi ho saka — manually bharo");
+        }
+    };
+    reader.readAsDataURL(file);
+};
 // ---------------------------Load Expense----------------------
 async function loadExpenses() {
     try {
@@ -540,7 +510,6 @@ async function loadExpenses() {
         console.log(err);
     }
 }
-// ---------------------------Expense List----------------------
 // ---------------------------Expense List----------------------
 function renderExpenseList(data) {
     const container = document.getElementById("expenseListContainer");
