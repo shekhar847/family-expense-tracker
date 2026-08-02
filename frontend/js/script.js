@@ -127,10 +127,10 @@ async function sendResetCode() {
         await emailjs.send("service_fwocbkr", "template_8itfsjc", {
             to_name: "User",
             to_email: email,
-            month: "Password Reset",
-            total: resetCodeStore,
-            count: "Your reset code is valid for 10 minutes",
-            highest_category: ""
+            month: "Password Reset Request",
+            total: "",
+            count: "",
+            highest_category: `Your Password Reset Code: ${resetCodeStore}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.`
         });
         showToast("Reset code sent successfully!");
         document.getElementById("forgotStep1").style.display = "none";
