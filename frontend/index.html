@@ -126,7 +126,7 @@
                                 <input type="password" id="password" placeholder="••••••••" style="padding-right:40px;">
                                 <button type="button" onclick="togglePassword('password', this)" 
                                     style="position:absolute;right:10px;bottom:9px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;">
-                                    👁
+                                    <i class="fa-solid fa-eye"></i>
                                 </button>
                             </div>
                             <button class="btn-primary-custom" style="width:100%;margin-top:8px;" onclick="loginUser()"> Sign in →</button>
@@ -262,16 +262,16 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Notes (Optional)</label>
-                                <input type="text" id="expenseNotes" placeholder="e.g. Medical bill, Office trip">
+                                <label class="form-label">Description</label>
+                                <input type="text" id="expenseNotes" placeholder="Add any extra details here...">
                             </div>
                             <div>
                                 <label class="form-label">Tag</label>
                                 <select id="expenseTag">
                                     <option value="">No Tag</option>
                                     <option value="Urgent">🔴 Urgent</option>
-                                    <option value="Optional">🟡 Optional</option>
-                                    <option value="Recurring">🔁 Recurring</option>
+                                    <option value="Optional">🟡 Unplanned</option>
+                                    <option value="Recurring">🔁 Mandatory</option>
                                 </select>
                             </div>
                             <div>
