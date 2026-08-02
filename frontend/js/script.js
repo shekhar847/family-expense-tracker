@@ -198,16 +198,42 @@ function showRegisterForm() {
 function logout() {
     currentUser = null;
     localStorage.removeItem("currentUser");
+    localStorage.removeItem("activeSection");
+    
+    // Data clear karo
     document.getElementById("userName").innerText = "Guest User";
     document.getElementById("userEmail").innerText = "Not logged in";
-    document.getElementById("email").value = "";
-    document.getElementById("password").value = "";
     document.getElementById("userAvatar").innerText = "?";
     document.getElementById("dashboardContent").style.display = "none";
     document.getElementById("landingPage").style.display = "block";
     document.getElementById("loginCard").style.display = "none";
     document.getElementById("sidebarUser").style.display = "none";
     document.getElementById("footerBadges").style.display = "none";
+    
+    // Email password clear karo
+    document.getElementById("email").value = "";
+    document.getElementById("password").value = "";
+    
+    // Stats reset karo
+    document.getElementById("statTotal").innerText = "0";
+    document.getElementById("statMonth").innerText = "0";
+    document.getElementById("statCount").innerText = "0";
+    document.getElementById("statAvg").innerText = "0";
+    
+    // Expense list clear karo
+    document.getElementById("expenseListContainer").innerHTML = `
+        <div class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <p>No expenses recorded yet.</p>
+        </div>`;
+    
+    // Family summary clear karo
+    const familySummary = document.getElementById("familySummary");
+    if (familySummary) familySummary.style.display = "none";
+    
+    // Dashboard section active karo
+    showSection("dashboardSection", document.querySelector('[onclick*="dashboardSection"]'));
+    
     showToast("Logged out", "danger");
 }
 // ---------------------------Add Expense-----------------------
