@@ -101,6 +101,30 @@ pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS tag TEXT DEFAUL
   .then(() => console.log("tag column ready"))
   .catch(err => console.log("tag column error:", err.message));
 
+// -------------------Reset Password-------------------
+app.post("/reset-password", async (req, res) => {
+    try {
+        const { email, new_password } = req.body;
+        if (!email || !new_password) {
+            return res.status(400).json({ message: "All fields required" });
+        }
+        const userResult = await pool.query(
+            "SELECT * FROM public.users WHERE email = $1", [email.trim().toLowerCase()]
+        );
+        if (userResult.rows.length === 0) {
+            return res.status(400).json({ message: "Email not found" });
+        }
+        const hashedPassword = await bcrypt.hash(new_password, 10);
+        await pool.query(
+            "UPDATE public.users SET password = $1 WHERE email = $2",
+            [hashedPassword, email.trim().toLowerCase()]
+        );
+        res.json({ message: "Password reset successful" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // -------------------Routes--------------------------
 app.get("/", (req, res) => res.send("Backend running"));
 app.get("/test-db", async (req, res) => {
