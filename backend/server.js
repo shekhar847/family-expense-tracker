@@ -220,7 +220,7 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
     }
 });
 
-// -------------------Receipt Scan Route (Groq Vision API)-------------------
+// -------------------Receipt Scan Route (OpenRouter Vision Free)-------------------
 app.post("/scan-receipt", async (req, res) => {
     try {
         const { image_data, media_type } = req.body;
@@ -228,9 +228,9 @@ app.post("/scan-receipt", async (req, res) => {
             return res.status(400).json({ error: "Image/PDF data missing" });
         }
 
-        const apiKey = process.env.GROQ_API_KEY;
+        const apiKey = process.env.OPENROUTER_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: "GROQ_API_KEY missing in server variables" });
+            return res.status(500).json({ error: "OPENROUTER_API_KEY missing in server variables" });
         }
 
         const mimeType = media_type || "image/jpeg";
@@ -238,10 +238,10 @@ app.post("/scan-receipt", async (req, res) => {
             ? image_data 
             : `data:${mimeType};base64,${image_data}`;
 
-        // Groq के एक्टिव Vision Models की लिस्ट (Fallback के साथ)
         const models = [
-            "llama-3.2-11b-vision-instruct",
-            "llama-3.2-90b-vision-instruct"
+            "google/gemini-2.0-flash-exp:free",
+            "meta-llama/llama-3.2-11b-vision-instruct:free",
+            "qwen/qwen-2-vl-72b-instruct:free"
         ];
 
         let responseData = null;
@@ -249,11 +249,13 @@ app.post("/scan-receipt", async (req, res) => {
 
         for (const model of models) {
             try {
-                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${apiKey}`,
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://expense-tracker-backend-j2h7.onrender.com",
+                        "X-Title": "Expense Tracker"
                     },
                     body: JSON.stringify({
                         model: model,
@@ -264,7 +266,7 @@ app.post("/scan-receipt", async (req, res) => {
                                     {
                                         type: "text",
                                         text: `Analyze this receipt or expense document and respond ONLY in valid JSON format without markdown code blocks:
-{ "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }`
+                                        { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }`
                                     },
                                     {
                                         type: "image_url",
@@ -283,18 +285,18 @@ app.post("/scan-receipt", async (req, res) => {
                 if (response.ok && data.choices && data.choices[0]?.message?.content) {
                     responseData = data;
                     isSuccess = true;
-                    console.log(`✅ Groq Scan successful using model: ${model}`);
+                    console.log(`✅ Scan successful using OpenRouter model: ${model}`);
                     break;
                 } else {
-                    console.log(`⚠️ Model ${model} failed:`, data.error?.message);
+                    console.log(`⚠️ Model ${model} failed:`, data.error?.message || JSON.stringify(data));
                 }
             } catch (err) {
-                console.log(`⚠️ Error calling model ${model}:`, err.message);
+                console.log(`⚠️ Error calling ${model}:`, err.message);
             }
         }
 
         if (!isSuccess || !responseData) {
-            return res.status(400).json({ error: "Groq Vision API failed with all available models." });
+            return res.status(400).json({ error: "Vision API failed with available models." });
         }
 
         const rawContent = responseData.choices[0].message.content;
