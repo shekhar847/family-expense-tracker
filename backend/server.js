@@ -220,7 +220,7 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
     }
 });
 
-// -------------------Receipt Scan Route (Handles Image & PDF)-------------------
+// -------------------Receipt Scan Route (Robust PDF & Image)-------------------
 app.post("/scan-receipt", async (req, res) => {
     try {
         const { image_data, media_type } = req.body;
@@ -240,6 +240,7 @@ app.post("/scan-receipt", async (req, res) => {
 
         if (isPdf) {
             console.log("📄 Processing PDF Document...");
+            
             // Extract text from base64 PDF
             const cleanBase64 = image_data.replace(/^data:application\/pdf;base64,/, "");
             const pdfBuffer = Buffer.from(cleanBase64, 'base64').toString('binary');
@@ -254,42 +255,66 @@ app.post("/scan-receipt", async (req, res) => {
                 extractedText = pdfBuffer.replace(/[^\x20-\x7E]/g, ' ');
             }
 
-            // Send extracted text to Llama 3.3 Text Model
-            const textResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "https://expense-tracker-backend-j2h7.onrender.com",
-                    "X-Title": "Expense Tracker"
-                },
-                body: JSON.stringify({
-                    model: "meta-llama/llama-3.3-70b-instruct:free",
-                    messages: [
-                        {
-                            role: "user",
-                            content: `Analyze this text extracted from an expense receipt or PDF report and respond ONLY in valid JSON format without markdown code blocks:
-{ "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }
+            // Reliable Free Text Models for PDF Extraction
+            const pdfModels = [
+                "meta-llama/llama-3.1-8b-instruct:free",
+                "qwen/qwen-2.5-7b-instruct:free",
+                "google/gemma-2-9b-it:free",
+                "mistralai/mistral-7b-instruct:free"
+            ];
 
-PDF Content:
-${extractedText}`
-                        }
-                    ],
-                    temperature: 0.1,
-                    response_format: { type: "json_object" }
-                })
-            });
+            let pdfSuccess = false;
+            let pdfParsedData = null;
 
-            const textData = await textResponse.json();
+            for (const textModel of pdfModels) {
+                try {
+                    console.log(`Trying PDF Text Model: ${textModel}`);
+                    const textResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${apiKey}`,
+                            "Content-Type": "application/json",
+                            "HTTP-Referer": "https://expense-tracker-backend-j2h7.onrender.com",
+                            "X-Title": "Expense Tracker"
+                        },
+                        body: JSON.stringify({
+                            model: textModel,
+                            messages: [
+                                {
+                                    role: "user",
+                                    content: `Analyze this text extracted from an expense receipt or PDF report and respond ONLY in valid JSON format without markdown code blocks:
+                                    { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }
+                                    
+                                    PDF Content:
+                                    ${extractedText}`
+                                }
+                            ],
+                            temperature: 0.1,
+                            response_format: { type: "json_object" }
+                        })
+                    });
 
-            if (textResponse.ok && textData.choices && textData.choices[0]?.message?.content) {
-                const rawContent = textData.choices[0].message.content;
-                const cleanedJson = rawContent.replace(/```json|```/g, "").trim();
-                const parsed = JSON.parse(cleanedJson);
-                console.log("✅ PDF Parsed Successfully:", parsed);
-                return res.json(parsed);
+                    const textData = await textResponse.json();
+
+                    if (textResponse.ok && textData.choices && textData.choices[0]?.message?.content) {
+                        const rawContent = textData.choices[0].message.content;
+                        const cleanedJson = rawContent.replace(/```json|```/g, "").trim();
+                        pdfParsedData = JSON.parse(cleanedJson);
+                        pdfSuccess = true;
+                        console.log(`✅ PDF Parsed Successfully using ${textModel}`);
+                        break;
+                    } else {
+                        console.log(`⚠️ Text Model ${textModel} failed:`, textData.error?.message || "No response");
+                    }
+                } catch (err) {
+                    console.log(`⚠️ Error with ${textModel}:`, err.message);
+                }
+            }
+
+            if (pdfSuccess && pdfParsedData) {
+                return res.json(pdfParsedData);
             } else {
-                throw new Error(textData.error?.message || "Failed to parse text from PDF");
+                return res.status(400).json({ error: "Failed to parse PDF text with available free models." });
             }
 
         } else {
@@ -342,7 +367,7 @@ ${extractedText}`
                                         {
                                             type: "text",
                                             text: `Analyze this receipt image and respond ONLY in valid JSON format without markdown code blocks:
-{ "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }`
+                                            { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }`
                                         },
                                         {
                                             type: "image_url",
