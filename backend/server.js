@@ -220,7 +220,7 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
     }
 });
 
-// -------------------Receipt Scan Route (Google Gemini Free API)-------------------
+// -------------------Receipt Scan Route (Google Gemini Multi-Model Support)-------------------
 app.post("/scan-receipt", async (req, res) => {
     try {
         const { image_data, media_type } = req.body;
@@ -234,67 +234,63 @@ app.post("/scan-receipt", async (req, res) => {
         }
 
         const mimeType = media_type || "image/jpeg";
-        let response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [
-                            {
-                                inline_data: {
-                                    mime_type: mimeType,
-                                    data: image_data
-                                }
-                            },
-                            {
-                                text: `Analyze this receipt or expense document and respond ONLY in valid JSON format without markdown blocks:
-                                { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }`
-                            }
-                        ]
-                    }]
-                })
-            }
-        );
 
-        let data = await response.json();
+        // ट्राई करने के लिए लेटेस्ट मॉडल्स की लिस्ट
+        const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-latest"];
+        let responseData = null;
+        let isSuccess = false;
 
-        if (!response.ok && data.error?.code === 404) {
-            console.log("Retrying with gemini-2.0-flash...");
-            response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [
-                                { inline_data: { mime_type: mimeType, data: image_data } },
-                                { text: `Analyze this receipt or expense document and respond ONLY in valid JSON format without markdown blocks: { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }` }
-                            ]
-                        }]
-                    })
+        // ऑटो-ट्राई लूप
+        for (const model of models) {
+            try {
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [
+                                    {
+                                        inline_data: {
+                                            mime_type: mimeType,
+                                            data: image_data
+                                        }
+                                    },
+                                    {
+                                        text: `Analyze this receipt or expense document and respond ONLY in valid JSON format without markdown code blocks:
+{ "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }`
+                                    }
+                                ]
+                            }]
+                        })
+                    }
+                );
+
+                const data = await response.json();
+
+                if (response.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                    responseData = data;
+                    isSuccess = true;
+                    console.log(`✅ Gemini Scan successful using model: ${model}`);
+                    break; // वर्किंग मॉडल मिलते ही लूप रोकें
+                } else {
+                    console.log(`⚠️ Model ${model} failed, trying next... Error:`, data.error?.message);
                 }
-            );
-            data = await response.json();
+            } catch (modelErr) {
+                console.log(`⚠️ Error calling ${model}:`, modelErr.message);
+            }
         }
 
-        if (!response.ok || !data.candidates) {
-            console.error("🔴 GEMINI API ERROR DETAILS:", JSON.stringify(data, null, 2));
-            return res.status(400).json({ 
-                error: data.error?.message || "Gemini API request failed" 
-            });
+        if (!isSuccess || !responseData) {
+            return res.status(400).json({ error: "Gemini API failed to process with available models." });
         }
 
-        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-            const rawText = data.candidates[0].content.parts[0].text;
-            const cleanedJson = rawText.replace(/```json|```/g, "").trim();
-            const parsed = JSON.parse(cleanedJson);
-            return res.json(parsed);
-        } else {
-            throw new Error("Invalid response format from Gemini API");
-        }
+        // Response Parse करें
+        const rawText = responseData.candidates[0].content.parts[0].text;
+        const cleanedJson = rawText.replace(/```json|```/g, "").trim();
+        const parsed = JSON.parse(cleanedJson);
+        return res.json(parsed);
 
     } catch (err) {
         console.error("Server Scan Error:", err.message);
