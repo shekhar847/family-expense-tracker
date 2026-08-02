@@ -885,7 +885,7 @@ function startVoice() {
     recognition.onerror = function () {
         btn.innerText = "🎤";
         btn.style.background = "";
-        showToast("Awaaz nahi suni — dobara try karo", "danger");
+        showToast("Didn't quite catch that — Please try again...", "danger");
     };
     recognition.onend = function () {
         btn.innerText = "🎤";
