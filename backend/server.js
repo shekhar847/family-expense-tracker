@@ -213,10 +213,13 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
+// -------------------Receipt Scan Route-------------------
 app.post("/scan-receipt", async (req, res) => {
     try {
         const { image_data, media_type } = req.body;
+        if (!image_data) {
+            return res.status(400).json({ error: "Image data missing" });
+        }
         const response = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
@@ -230,19 +233,40 @@ app.post("/scan-receipt", async (req, res) => {
                 messages: [{
                     role: "user",
                     content: [
-                        { type: "image", source: { type: "base64", media_type, data: image_data } },
-                        { type: "text", text: `Analyze this receipt and respond ONLY in this JSON format: { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }` }
+                        { 
+                            type: "image", 
+                            source: { 
+                                type: "base64", 
+                                media_type: media_type || "image/jpeg", 
+                                data: image_data 
+                            } 
+                        },
+                        { 
+                            type: "text", 
+                            text: `Analyze this receipt and respond ONLY in this JSON format: { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }` 
+                        }
                     ]
                 }]
             })
         });
-
         const data = await response.json();
-        const text = data.content[0].text;
-        const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-        res.json(parsed);
+
+        if (!response.ok) {
+            console.error("Anthropic API Error Details:", data);
+            return res.status(response.status).json({ 
+                error: data.error?.message || "Anthropic API request failed" 
+            });
+        }
+        if (data.content && data.content[0] && data.content[0].text) {
+            const rawText = data.content[0].text;
+            const cleanedJson = rawText.replace(/```json|```/g, "").trim();
+            const parsed = JSON.parse(cleanedJson);
+            return res.json(parsed);
+        } else {
+            throw new Error("Invalid response format from Claude API");
+        }
     } catch (err) {
-        console.error(err);
+        console.error("Server Scan Error:", err.message);
         res.status(500).json({ error: err.message });
     }
 });
