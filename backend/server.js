@@ -228,59 +228,55 @@ app.post("/scan-receipt", async (req, res) => {
             return res.status(400).json({ error: "Image/PDF data missing" });
         }
 
-        const type = media_type || "image/jpeg";
-        const isPdf = type.includes("pdf");
-        const mediaContentBlock = isPdf ? {
-            type: "document",
-            source: {
-                type: "base64",
-                media_type: "application/pdf",
-                data: image_data
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            return res.status(500).json({ error: "GEMINI_API_KEY missing in server variables" });
+        }
+
+        const mimeType = media_type || "image/jpeg";
+
+        // Google Gemini Vision API Request
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            {
+                                inline_data: {
+                                    mime_type: mimeType,
+                                    data: image_data
+                                }
+                            },
+                            {
+                                text: `Analyze this receipt or expense document and respond ONLY in valid JSON format without markdown blocks:
+                                { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }`
+                            }
+                        ]
+                    }]
+                })
             }
-        } : {
-            type: "image",
-            source: {
-                type: "base64",
-                media_type: type,
-                data: image_data
-            }
-        };
-        const response = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "x-api-key": process.env.ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01"
-            },
-            body: JSON.stringify({
-                model: "claude-3-5-sonnet-20240620", 
-                max_tokens: 500,
-                messages: [{
-                    role: "user",
-                    content: [
-                        mediaContentBlock,
-                        { 
-                            type: "text", 
-                            text: `Analyze this receipt or expense document and respond ONLY in this JSON format: { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }` 
-                        }
-                    ]
-                }]
-            })
-        });
+        );
 
         const data = await response.json();
 
-        if (!response.ok || !data.content) {
-            console.error("🔴 ANTHROPIC API ERROR DETAILS:", JSON.stringify(data, null, 2));
+        if (!response.ok) {
+            console.error("🔴 GEMINI API ERROR DETAILS:", JSON.stringify(data, null, 2));
             return res.status(400).json({ 
-                error: data.error?.message || "Anthropic API request failed" 
+                error: data.error?.message || "Gemini API request failed" 
             });
         }
 
-        const rawText = data.content[0].text;
-        const cleanedJson = rawText.replace(/```json|```/g, "").trim();
-        const parsed = JSON.parse(cleanedJson);
-        return res.json(parsed);
+        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+            const rawText = data.candidates[0].content.parts[0].text;
+            const cleanedJson = rawText.replace(/```json|```/g, "").trim();
+            const parsed = JSON.parse(cleanedJson);
+            return res.json(parsed);
+        } else {
+            throw new Error("Invalid response format from Gemini API");
+        }
 
     } catch (err) {
         console.error("Server Scan Error:", err.message);
