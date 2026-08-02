@@ -214,6 +214,39 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
     }
 });
 
+app.post("/scan-receipt", async (req, res) => {
+    try {
+        const { image_data, media_type } = req.body;
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-api-key": process.env.ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01"
+            },
+            body: JSON.stringify({
+                model: "claude-3-5-sonnet-20240620", 
+                max_tokens: 500,
+                messages: [{
+                    role: "user",
+                    content: [
+                        { type: "image", source: { type: "base64", media_type, data: image_data } },
+                        { type: "text", text: `Analyze this receipt and respond ONLY in this JSON format: { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }` }
+                    ]
+                }]
+            })
+        });
+
+        const data = await response.json();
+        const text = data.content[0].text;
+        const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+        res.json(parsed);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.use("/", authRoutes);
 app.use("/", expenseRoutes);
 
