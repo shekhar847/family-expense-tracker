@@ -105,6 +105,75 @@ async function loginUser() {
         showToast("Server Error", "danger");
     }
 }
+// -------------------Forgot Password-------------------
+let resetCodeStore = "";
+
+function showForgotPassword(show = true) {
+    document.getElementById("loginCard").style.display = show ? "none" : "block";
+    document.getElementById("forgotCard").style.display = show ? "block" : "none";
+    document.getElementById("forgotStep1").style.display = "block";
+    document.getElementById("forgotStep2").style.display = "none";
+    document.getElementById("forgotEmail").value = "";
+}
+async function sendResetCode() {
+    const email = document.getElementById("forgotEmail").value.trim();
+    if (!email) {
+        showToast("Please enter your email", "danger");
+        return;
+    }
+    // 6 digit random code generate karo
+    resetCodeStore = Math.floor(100000 + Math.random() * 900000).toString();
+    try {
+        await emailjs.send("service_fwocbkr", "template_8itfsjc", {
+            to_name: "User",
+            to_email: email,
+            month: "Password Reset",
+            total: resetCodeStore,
+            count: "Your reset code is valid for 10 minutes",
+            highest_category: ""
+        });
+        showToast("Reset code sent successfully!");
+        document.getElementById("forgotStep1").style.display = "none";
+        document.getElementById("forgotStep2").style.display = "block";
+    } catch (err) {
+        console.log(err);
+        showToast("Error sending email", "danger");
+    }
+}
+async function verifyResetCode() {
+    const code = document.getElementById("resetCode").value.trim();
+    const newPassword = document.getElementById("newResetPassword").value.trim();
+    const email = document.getElementById("forgotEmail").value.trim();
+    if (!code || !newPassword) {
+        showToast("Please fill in all fields", "danger");
+        return;
+    }
+    if (code !== resetCodeStore) {
+        showToast("Invalid code — please try again", "danger");
+        return;
+    }
+    if (newPassword.length < 6) {
+        showToast("Password must be at least 6 characters long", "danger");
+        return;
+    }
+    try {
+        const res = await fetch(`${BASE_URL}/reset-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, new_password: newPassword })
+        });
+        const data = await res.json();
+        if (data.message === "Password reset successful") {
+            showToast("✅ Password reset successfully! Please log in.");
+            showForgotPassword(false);
+            resetCodeStore = "";
+        } else {
+            showToast(data.message || "Error", "danger");
+        }
+    } catch (err) {
+        showToast("Server Error", "danger");
+    }
+}
 // ---------------------------ShowPassword-----------------------
 function togglePassword(id, btn) {
     const input = document.getElementById(id);
