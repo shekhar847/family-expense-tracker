@@ -105,6 +105,17 @@ async function loginUser() {
         showToast("Server Error", "danger");
     }
 }
+// ---------------------------ShowPassword-----------------------
+function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+    } else {
+        input.type = "password";
+        btn.textContent = "👁";
+    }
+}
 // ---------------------------handleGoogleLogin-----------------------
 async function handleGoogleLogin(response) {
     try {
