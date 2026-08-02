@@ -235,6 +235,39 @@ function logout() {
     showSection("dashboardSection", document.querySelector('[onclick*="dashboardSection"]'));
     
     showToast("Logged out", "danger");
+
+    // Charts clear karo
+    if (window.barChartInst) { window.barChartInst.destroy(); window.barChartInst = null; }
+    if (window.pieChartInst) { window.pieChartInst.destroy(); window.pieChartInst = null; }
+    if (window.miniChartInst) { window.miniChartInst.destroy(); window.miniChartInst = null; }
+    if (window.trendChartInst) { window.trendChartInst.destroy(); window.trendChartInst = null; }
+    
+    // Report table clear karo
+    const reportBody = document.getElementById("reportTableBody");
+    if (reportBody) reportBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text3);">No data available</td></tr>`;
+    
+    // Recent expenses clear karo
+    const recentExp = document.getElementById("recentExpenses");
+    if (recentExp) recentExp.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗒</div><p>No expenses yet</p></div>`;
+    
+    // Family members list clear karo
+    const famList = document.getElementById("familyMembersList");
+    if (famList) famList.innerHTML = "";
+    
+    // Budget status clear karo
+    const budgetStatus = document.getElementById("budgetStatus");
+    if (budgetStatus) budgetStatus.innerHTML = "";
+    
+    // Budget progress clear karo
+    const budgetCard = document.getElementById("budgetProgressCard");
+    if (budgetCard) budgetCard.style.display = "none";
+    
+    // highestCat clear karo
+    const highestCat = document.getElementById("highestCat");
+    if (highestCat) highestCat.innerText = "";
+    
+    // allExpensesData clear karo
+    allExpensesData = [];
 }
 // ---------------------------Add Expense-----------------------
 async function addExpense() {
