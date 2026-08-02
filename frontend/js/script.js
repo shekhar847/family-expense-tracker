@@ -109,26 +109,35 @@ async function loginUser() {
 let resetCodeStore = "";
 let storedEmail = "";
 
-function showForgotPassword(show = true) {
-    document.getElementById("loginCard").style.display = show ? "none" : "block";
-    document.getElementById("forgotCard").style.display = show ? "block" : "none";
-    document.getElementById("forgotStep1").style.display = "block";
-    document.getElementById("forgotStep2").style.display = "none";
-    document.getElementById("forgotEmail").value = "";
-    storedEmail = "";
-}
+// इसे global scope में रखा गया है ताकि HTML से सीधे कॉल हो सके
+window.showForgotPassword = function(show = true) {
+    const loginCard = document.getElementById("loginCard");
+    const forgotCard = document.getElementById("forgotCard");
+    const forgotStep1 = document.getElementById("forgotStep1");
+    const forgotStep2 = document.getElementById("forgotStep2");
+    const forgotEmail = document.getElementById("forgotEmail");
 
-async function sendResetCode() {
-    const email = document.getElementById("forgotEmail").value.trim();
+    if (loginCard) loginCard.style.display = show ? "none" : "block";
+    if (forgotCard) forgotCard.style.display = show ? "block" : "none";
+    if (forgotStep1) forgotStep1.style.display = "block";
+    if (forgotStep2) forgotStep2.style.display = "none";
+    if (forgotEmail) forgotEmail.value = "";
+    storedEmail = "";
+};
+
+window.sendResetCode = async function() {
+    const emailInput = document.getElementById("forgotEmail");
+    if (!emailInput) return;
+    
+    const email = emailInput.value.trim();
     if (!email) {
         showToast("Please enter your email", "danger");
         return;
     }
     
-    storedEmail = email;ा
-    
-    // 6 digit random code generate karo
+    storedEmail = email;
     resetCodeStore = Math.floor(100000 + Math.random() * 900000).toString();
+    
     try {
         await emailjs.send("service_fwocbkr", "template_8itfsjc", {
             to_name: "User",
@@ -139,17 +148,25 @@ async function sendResetCode() {
             highest_category: `Your Password Reset Code: ${resetCodeStore}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.`
         });
         showToast("Reset code sent successfully!");
-        document.getElementById("forgotStep1").style.display = "none";
-        document.getElementById("forgotStep2").style.display = "block";
+        
+        const step1 = document.getElementById("forgotStep1");
+        const step2 = document.getElementById("forgotStep2");
+        if (step1) step1.style.display = "none";
+        if (step2) step2.style.display = "block";
     } catch (err) {
         console.log(err);
         showToast("Error sending email", "danger");
     }
-}
+};
 
-async function verifyResetCode() {
-    const code = document.getElementById("resetCode").value.trim();
-    const newPassword = document.getElementById("newResetPassword").value.trim();
+window.verifyResetCode = async function() {
+    const codeInput = document.getElementById("resetCode");
+    const passwordInput = document.getElementById("newResetPassword");
+    
+    if (!codeInput || !passwordInput) return;
+
+    const code = codeInput.value.trim();
+    const newPassword = passwordInput.value.trim();
     const email = storedEmail;
 
     if (!code || !newPassword) {
@@ -164,6 +181,7 @@ async function verifyResetCode() {
         showToast("Password must be at least 6 characters long", "danger");
         return;
     }
+    
     try {
         const res = await fetch(`${BASE_URL}/reset-password`, {
             method: "POST",
@@ -184,7 +202,7 @@ async function verifyResetCode() {
         console.log(err);
         showToast("Server Error", "danger");
     }
-}
+};
 // ---------------------------ShowPassword-----------------------
 function togglePassword(id, btn) {
     const input = document.getElementById(id);
