@@ -236,15 +236,20 @@ app.post("/scan-receipt", async (req, res) => {
             return res.status(500).json({ error: "GEMINI_API_KEY missing in server environment variables" });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // Updated Model Name for latest SDK compatibility
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        // Base64 cleaning and MIME detection
+        // Base64 cleaning
         const cleanBase64 = image_data.replace(/^data:(.*);base64,/, "");
         
-        // Auto-detect PDF or fallback to passed media_type or image/jpeg
+        // Auto-detect MIME type
         let mimeType = media_type || "image/jpeg";
-        if (image_data.startsWith("data:application/pdf") || image_data.startsWith("JVBERi0")) {
+        if (image_data.startsWith("data:application/pdf") || cleanBase64.startsWith("JVBERi0")) {
             mimeType = "application/pdf";
+        } else if (image_data.startsWith("data:image/png")) {
+            mimeType = "image/png";
+        } else if (image_data.startsWith("data:image/webp")) {
+            mimeType = "image/webp";
         }
 
         console.log(`📄 Scanning document with Gemini (Type: ${mimeType})...`);
