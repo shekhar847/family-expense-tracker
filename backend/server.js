@@ -23,8 +23,8 @@ app.use(cors({
   methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
   allowedHeaders: ["Content-Type"]
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // -------------------Google Login-------------------
 app.post("/google-login", async (req, res) => {
@@ -37,13 +37,11 @@ app.post("/google-login", async (req, res) => {
         const payload = ticket.getPayload();
         const { name, email, picture } = payload;
 
-        // User check karo ya banao
         let userResult = await pool.query(
             "SELECT * FROM public.users WHERE email = $1", [email]
         );
 
         if (userResult.rows.length === 0) {
-            // Naya user banao
             userResult = await pool.query(
                 "INSERT INTO public.users (name, email, password, avatar) VALUES ($1, $2, $3, $4) RETURNING *",
                 [name, email, "google-oauth", picture]
@@ -60,6 +58,7 @@ app.post("/google-login", async (req, res) => {
         res.status(500).json({ message: "Google Login failed", error: err.message });
     }
 });
+
 // -------------------Create Tables-------------------
 pool.query(`CREATE TABLE IF NOT EXISTS public.users (
   id SERIAL PRIMARY KEY, name TEXT, email TEXT UNIQUE, password TEXT
@@ -81,6 +80,7 @@ pool.query(`ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar TEXT`)
 pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT ''`)
   .then(() => console.log("notes column ready"))
   .catch(err => console.log("notes column error:", err.message));
+
 // -------------------Family Members Table------------
 pool.query(`CREATE TABLE IF NOT EXISTS public.family_members (
   id SERIAL PRIMARY KEY,
@@ -127,6 +127,7 @@ app.post("/reset-password", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 // -------------------Routes--------------------------
 app.get("/", (req, res) => res.send("Backend running"));
 app.get("/test-db", async (req, res) => {
@@ -137,6 +138,7 @@ app.get("/test-db", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
+
 // -------------------Family Members API-------------------
 app.get("/family-members/:user_id", async (req, res) => {
     try {
@@ -150,6 +152,7 @@ app.get("/family-members/:user_id", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 app.post("/add-family-member", async (req, res) => {
     try {
         const { user_id, name } = req.body;
@@ -162,6 +165,7 @@ app.post("/add-family-member", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 app.delete("/delete-family-member/:id", async (req, res) => {
     try {
         const { id } = req.params;
@@ -171,6 +175,7 @@ app.delete("/delete-family-member/:id", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 // -------------------Monthly Trend-------------------
 app.get("/monthly-trend/:user_id", async (req, res) => {
     try {
@@ -192,6 +197,7 @@ app.get("/monthly-trend/:user_id", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 // -------------------Monthly Comparison-------------------
 app.get("/monthly-comparison/:user_id", async (req, res) => {
     try {
@@ -213,6 +219,7 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 // -------------------Receipt Scan Route-------------------
 app.post("/scan-receipt", async (req, res) => {
     try {
