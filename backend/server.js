@@ -220,7 +220,7 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
     }
 });
 
-// -------------------Receipt Scan Route (OpenRouter Vision Free)-------------------
+// -------------------Receipt Scan Route (OpenRouter Dynamic Vision)-------------------
 app.post("/scan-receipt", async (req, res) => {
     try {
         const { image_data, media_type } = req.body;
@@ -238,17 +238,47 @@ app.post("/scan-receipt", async (req, res) => {
             ? image_data 
             : `data:${mimeType};base64,${image_data}`;
 
-        const models = [
-            "google/gemini-2.0-flash-exp:free",
-            "meta-llama/llama-3.2-11b-vision-instruct:free",
-            "qwen/qwen-2-vl-72b-instruct:free"
+        // 1. OpenRouter से Live Active Models की लिस्ट dynamic तरह से प्राप्त करें
+        let freeVisionModels = [];
+        try {
+            const modelsRes = await fetch("https://openrouter.ai/api/v1/models");
+            const modelsData = await modelsRes.json();
+            if (modelsData && modelsData.data) {
+                freeVisionModels = modelsData.data
+                    .filter(m => 
+                        m.id.endsWith(":free") && 
+                        (
+                            m.architecture?.modality?.includes("image") || 
+                            m.architecture?.modality?.includes("multimodal") ||
+                            m.id.includes("vision") ||
+                            m.id.includes("gemini") ||
+                            m.id.includes("vl") ||
+                            m.id.includes("pixtral")
+                        )
+                    )
+                    .map(m => m.id);
+            }
+        } catch (e) {
+            console.log("Live models list fetch failed, using fallbacks:", e.message);
+        }
+
+        // 2. फ़ॉलबैक मॉडल्स (अगर Dynamic Fetch में देर हो)
+        const fallbackModels = [
+            "google/gemini-2.0-flash-lite-001:free",
+            "google/gemini-2.0-flash-001:free",
+            "qwen/qwen-2.5-vl-72b-instruct:free",
+            "mistralai/pixtral-12b:free"
         ];
+
+        // दोनों लिस्ट को मिला कर Unique मॉडल्स बनाएँ
+        const modelsToTry = [...new Set([...freeVisionModels, ...fallbackModels])];
 
         let responseData = null;
         let isSuccess = false;
 
-        for (const model of models) {
+        for (const model of modelsToTry) {
             try {
+                console.log(`Trying model: ${model}`);
                 const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: "POST",
                     headers: {
@@ -285,10 +315,10 @@ app.post("/scan-receipt", async (req, res) => {
                 if (response.ok && data.choices && data.choices[0]?.message?.content) {
                     responseData = data;
                     isSuccess = true;
-                    console.log(`✅ Scan successful using OpenRouter model: ${model}`);
+                    console.log(`✅ Scan successful using model: ${model}`);
                     break;
                 } else {
-                    console.log(`⚠️ Model ${model} failed:`, data.error?.message || JSON.stringify(data));
+                    console.log(`⚠️ Model ${model} failed:`, data.error?.message || "No content returned");
                 }
             } catch (err) {
                 console.log(`⚠️ Error calling ${model}:`, err.message);
@@ -296,7 +326,7 @@ app.post("/scan-receipt", async (req, res) => {
         }
 
         if (!isSuccess || !responseData) {
-            return res.status(400).json({ error: "Vision API failed with available models." });
+            return res.status(400).json({ error: "Vision API failed with all available free models." });
         }
 
         const rawContent = responseData.choices[0].message.content;
