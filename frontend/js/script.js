@@ -873,7 +873,7 @@ function startVoice() {
     recognition.interimResults = false;
     btn.innerText = "🔴";
     btn.style.background = "var(--redbg)";
-    showToast("Bol rahe hain... sun raha hoon 🎤");
+    showToast("Listening...");
     recognition.start();
     recognition.onresult = function (event) {
         const text = event.results[0][0].transcript.toLowerCase();
