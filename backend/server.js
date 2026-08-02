@@ -220,7 +220,7 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
     }
 });
 
-// -------------------Receipt Scan Route (Robust PDF & Image)-------------------
+// ------------------- Receipt Scan Route (PDF & Image Handling) -------------------
 app.post("/scan-receipt", async (req, res) => {
     try {
         const { image_data, media_type } = req.body;
@@ -230,10 +230,10 @@ app.post("/scan-receipt", async (req, res) => {
 
         const apiKey = process.env.OPENROUTER_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: "OPENROUTER_API_KEY missing in server variables" });
+            return res.status(500).json({ error: "OPENROUTER_API_KEY missing in server environment variables" });
         }
 
-        // Check if file is PDF
+        // 1. PDF Detection
         const isPdf = media_type === "application/pdf" || 
                       image_data.startsWith("data:application/pdf") || 
                       image_data.startsWith("JVBERi0");
@@ -255,12 +255,13 @@ app.post("/scan-receipt", async (req, res) => {
                 extractedText = pdfBuffer.replace(/[^\x20-\x7E]/g, ' ');
             }
 
-            // Reliable Free Text Models for PDF Extraction
+            // Reliable Active Free Text Models on OpenRouter (Excludes Llama-3.3-70b)
             const pdfModels = [
                 "meta-llama/llama-3.1-8b-instruct:free",
                 "qwen/qwen-2.5-7b-instruct:free",
                 "google/gemma-2-9b-it:free",
-                "mistralai/mistral-7b-instruct:free"
+                "mistralai/mistral-7b-instruct:free",
+                "deepseek/deepseek-r1:free"
             ];
 
             let pdfSuccess = false;
@@ -282,15 +283,14 @@ app.post("/scan-receipt", async (req, res) => {
                             messages: [
                                 {
                                     role: "user",
-                                    content: `Analyze this text extracted from an expense receipt or PDF report and respond ONLY in valid JSON format without markdown code blocks:
+                                    content: `Analyze this text extracted from an expense receipt or PDF report and respond ONLY in valid JSON format without markdown formatting:
                                     { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }
                                     
                                     PDF Content:
-                                    ${extractedText}`
+                                    ${extractedText.substring(0, 4000)}`
                                 }
                             ],
-                            temperature: 0.1,
-                            response_format: { type: "json_object" }
+                            temperature: 0.1
                         })
                     });
 
@@ -299,55 +299,52 @@ app.post("/scan-receipt", async (req, res) => {
                     if (textResponse.ok && textData.choices && textData.choices[0]?.message?.content) {
                         const rawContent = textData.choices[0].message.content;
                         const cleanedJson = rawContent.replace(/```json|```/g, "").trim();
-                        pdfParsedData = JSON.parse(cleanedJson);
-                        pdfSuccess = true;
-                        console.log(`✅ PDF Parsed Successfully using ${textModel}`);
-                        break;
+                        
+                        // Parse JSON safely
+                        const firstBrace = cleanedJson.indexOf("{");
+                        const lastBrace = cleanedJson.lastIndexOf("}");
+                        if (firstBrace !== -1 && lastBrace !== -1) {
+                            const jsonSubstring = cleanedJson.substring(firstBrace, lastBrace + 1);
+                            pdfParsedData = JSON.parse(jsonSubstring);
+                            pdfSuccess = true;
+                            console.log(`✅ PDF Parsed Successfully using ${textModel}`);
+                            break;
+                        }
                     } else {
-                        console.log(`⚠️ Text Model ${textModel} failed:`, textData.error?.message || "No response");
+                        console.log(`⚠️ PDF Text Model ${textModel} failed:`, textData.error?.message || "No valid response");
                     }
                 } catch (err) {
-                    console.log(`⚠️ Error with ${textModel}:`, err.message);
+                    console.log(`⚠️ Error with PDF Model ${textModel}:`, err.message);
                 }
             }
 
             if (pdfSuccess && pdfParsedData) {
                 return res.json(pdfParsedData);
             } else {
-                return res.status(400).json({ error: "Failed to parse PDF text with available free models." });
+                return res.status(400).json({ error: "Failed to extract receipt data from PDF with available free models." });
             }
 
         } else {
-            // 🖼️ Processing Image (JPG/PNG)
+            // 2. Image Processing (JPG/PNG)
             console.log("🖼️ Processing Image Document...");
             const mimeType = media_type || "image/jpeg";
             const base64Data = image_data.startsWith("data:") 
                 ? image_data 
                 : `data:${mimeType};base64,${image_data}`;
 
+            // Currently active free vision models
             const visionModels = [
+                "qwen/qwen-2.5-vl-72b-instruct:free",
                 "meta-llama/llama-3.2-11b-vision-instruct:free",
-                "google/gemini-2.0-flash-lite-001:free",
-                "qwen/qwen-2.5-vl-72b-instruct:free"
+                "google/gemma-3-27b-it:free",
+                "google/gemma-3-12b-it:free",
+                "mistralai/pixtral-12b:free"
             ];
-
-            let liveModels = [];
-            try {
-                const modelsRes = await fetch("https://openrouter.ai/api/v1/models");
-                const modelsData = await modelsRes.json();
-                if (modelsData?.data) {
-                    liveModels = modelsData.data
-                        .filter(m => m.id.endsWith(":free") && (m.id.includes("vision") || m.id.includes("vl") || m.id.includes("gemini") || m.id.includes("pixtral")))
-                        .map(m => m.id);
-                }
-            } catch (e) {}
-
-            const modelsToTry = [...new Set([...liveModels, ...visionModels])];
 
             let responseData = null;
             let isSuccess = false;
 
-            for (const model of modelsToTry) {
+            for (const model of visionModels) {
                 try {
                     console.log(`Trying Image Vision Model: ${model}`);
                     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -376,8 +373,7 @@ app.post("/scan-receipt", async (req, res) => {
                                     ]
                                 }
                             ],
-                            temperature: 0.1,
-                            response_format: { type: "json_object" }
+                            temperature: 0.1
                         })
                     });
 
@@ -388,6 +384,8 @@ app.post("/scan-receipt", async (req, res) => {
                         isSuccess = true;
                         console.log(`✅ Image Scan successful using model: ${model}`);
                         break;
+                    } else {
+                        console.log(`⚠️ Vision Model ${model} failed:`, data.error?.message || "No valid response");
                     }
                 } catch (err) {
                     console.log(`⚠️ Model ${model} failed:`, err.message);
@@ -395,12 +393,16 @@ app.post("/scan-receipt", async (req, res) => {
             }
 
             if (!isSuccess || !responseData) {
-                return res.status(400).json({ error: "Image Vision API failed with available models." });
+                return res.status(400).json({ error: "All free vision models are currently busy or unavailable. Please try again in a few moments." });
             }
 
             const rawContent = responseData.choices[0].message.content;
             const cleanedJson = rawContent.replace(/```json|```/g, "").trim();
-            const parsed = JSON.parse(cleanedJson);
+            const firstBrace = cleanedJson.indexOf("{");
+            const lastBrace = cleanedJson.lastIndexOf("}");
+            const jsonSubstring = cleanedJson.substring(firstBrace, lastBrace + 1);
+            const parsed = JSON.parse(jsonSubstring);
+            
             return res.json(parsed);
         }
 
