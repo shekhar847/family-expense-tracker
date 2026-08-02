@@ -107,6 +107,7 @@ async function loginUser() {
 }
 // -------------------Forgot Password-------------------
 let resetCodeStore = "";
+let storedEmail = ""; // ईमेल को सेफ रखने के लिए वेरिएबल
 
 function showForgotPassword(show = true) {
     document.getElementById("loginCard").style.display = show ? "none" : "block";
@@ -114,13 +115,18 @@ function showForgotPassword(show = true) {
     document.getElementById("forgotStep1").style.display = "block";
     document.getElementById("forgotStep2").style.display = "none";
     document.getElementById("forgotEmail").value = "";
+    storedEmail = "";
 }
+
 async function sendResetCode() {
     const email = document.getElementById("forgotEmail").value.trim();
     if (!email) {
         showToast("Please enter your email", "danger");
         return;
     }
+    
+    storedEmail = email; // ईमेल यहाँ सेव हो जाएगा
+    
     // 6 digit random code generate karo
     resetCodeStore = Math.floor(100000 + Math.random() * 900000).toString();
     try {
@@ -140,10 +146,12 @@ async function sendResetCode() {
         showToast("Error sending email", "danger");
     }
 }
+
 async function verifyResetCode() {
     const code = document.getElementById("resetCode").value.trim();
     const newPassword = document.getElementById("newResetPassword").value.trim();
-    const email = document.getElementById("forgotEmail").value.trim();
+    const email = storedEmail; // सेव किया हुआ ईमेल इस्तेमाल होगा
+
     if (!code || !newPassword) {
         showToast("Please fill in all fields", "danger");
         return;
@@ -163,14 +171,17 @@ async function verifyResetCode() {
             body: JSON.stringify({ email, new_password: newPassword })
         });
         const data = await res.json();
-        if (data.message === "Password reset successful") {
+        
+        if (res.ok && data.message === "Password reset successful") {
             showToast("✅ Password reset successfully! Please log in.");
             showForgotPassword(false);
             resetCodeStore = "";
+            storedEmail = "";
         } else {
             showToast(data.message || "Error", "danger");
         }
     } catch (err) {
+        console.log(err);
         showToast("Server Error", "danger");
     }
 }
