@@ -297,9 +297,9 @@ async function loadExpenses() {
     }
 }
 // ---------------------------Expense List----------------------
+// ---------------------------Expense List----------------------
 function renderExpenseList(data) {
-    const container =
-        document.getElementById("expenseListContainer");
+    const container = document.getElementById("expenseListContainer");
     if (!container) return;
     const badge = document.getElementById("expenseCountBadge");
     if (badge) badge.innerText = `${data.length} entries`;
@@ -324,7 +324,13 @@ function renderExpenseList(data) {
             <span style="font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:10px;">
                 👤 ${e.member_name || 'Self'}
             </span>
-            ${e.tag ? `<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${e.tag === 'Urgent' ? 'var(--redbg)' : e.tag === 'Optional' ? 'var(--amberbg)' : 'var(--bluebg)'};color:${e.tag === 'Urgent' ? 'var(--red)' : e.tag === 'Optional' ? 'var(--amber)' : 'var(--blue)'};">${e.tag === 'Urgent' ? '🔴' : e.tag === 'Optional' ? '🟡' : '🔁'} ${e.tag}</span>` : ''}
+            
+            ${e.tag ? `
+                <span style="font-size:10px;padding:2px 8px;border-radius:10px; background:${e.tag === 'Urgent' ? 'var(--redbg)' : e.tag === 'Unplanned' ? 'var(--amberbg)' : 'var(--bluebg)'}; color:${e.tag === 'Urgent' ? 'var(--red)' : e.tag === 'Unplanned' ? 'var(--amber)' : 'var(--blue)'};">
+                    ${e.tag === 'Urgent' ? '🔴' : e.tag === 'Unplanned' ? '🟡' : '🔁'} ${e.tag}
+                </span>
+            ` : ''}
+
             <span class="expense-date" style="font-size:11px;color:var(--text3);">
                 ${e.date ? new Date(e.date).toLocaleDateString("en-IN") : "-"}
             </span>
