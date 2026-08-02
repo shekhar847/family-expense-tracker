@@ -220,7 +220,7 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
     }
 });
 
-// -------------------Receipt Scan Route (Google Gemini 2.0 Flash)-------------------
+// -------------------Receipt Scan Route (Groq Vision API)-------------------
 app.post("/scan-receipt", async (req, res) => {
     try {
         const { image_data, media_type } = req.body;
@@ -228,53 +228,62 @@ app.post("/scan-receipt", async (req, res) => {
             return res.status(400).json({ error: "Image/PDF data missing" });
         }
 
-        const apiKey = process.env.GEMINI_API_KEY;
+        const apiKey = process.env.GROQ_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: "GEMINI_API_KEY missing in server variables" });
+            return res.status(500).json({ error: "GROQ_API_KEY missing in server variables" });
         }
 
         const mimeType = media_type || "image/jpeg";
+        // Ensure image base64 has proper data URI header
+        const base64Data = image_data.startsWith("data:") 
+            ? image_data 
+            : `data:${mimeType};base64,${image_data}`;
 
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "llama-3.2-11b-vision-preview",
+                messages: [
+                    {
+                        role: "user",
+                        content: [
                             {
-                                inline_data: {
-                                    mime_type: mimeType,
-                                    data: image_data
-                                }
-                            },
-                            {
+                                type: "text",
                                 text: `Analyze this receipt or expense document and respond ONLY in valid JSON format without markdown code blocks:
                                 { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }`
+                            },
+                            {
+                                type: "image_url",
+                                image_url: { url: base64Data }
                             }
                         ]
-                    }]
-                })
-            }
-        );
+                    }
+                ],
+                temperature: 0.1,
+                response_format: { type: "json_object" }
+            })
+        });
 
         const data = await response.json();
 
         if (!response.ok) {
-            console.error("🔴 GEMINI API ERROR DETAILS:", JSON.stringify(data, null, 2));
+            console.error("🔴 GROQ API ERROR DETAILS:", JSON.stringify(data, null, 2));
             return res.status(400).json({ 
-                error: data.error?.message || "Gemini API request failed" 
+                error: data.error?.message || "Groq API request failed" 
             });
         }
 
-        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-            const rawText = data.candidates[0].content.parts[0].text;
-            const cleanedJson = rawText.replace(/```json|```/g, "").trim();
+        if (data.choices && data.choices[0]?.message?.content) {
+            const rawContent = data.choices[0].message.content;
+            const cleanedJson = rawContent.replace(/```json|```/g, "").trim();
             const parsed = JSON.parse(cleanedJson);
             return res.json(parsed);
         } else {
-            throw new Error("Invalid response format from Gemini API");
+            throw new Error("Invalid response format from Groq API");
         }
 
     } catch (err) {
