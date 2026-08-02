@@ -446,34 +446,33 @@ async function addExpense() {
 }
 // -------------------Receipt Scan-------------------
 window.scanReceipt = async function() {
-    const fileInput = document.getElementById("receiptInput");
+    const fileInput = document.getElementById("receiptInput"); 
     if (!fileInput || !fileInput.files[0]) {
-        alert("Please select an image first");
+        alert("कृपया पहले रसीद की फोटो सेलेक्ट करें!");
         return;
     }
-
     const file = fileInput.files[0];
     const reader = new FileReader();
-    
     reader.onload = async function(e) {
         const base64String = e.target.result.split(',')[1];
         const mediaType = file.type;
-
         try {
             const res = await fetch(`${BASE_URL}/scan-receipt`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ image_data: base64String, media_type: mediaType })
+                body: JSON.stringify({ 
+                    image_data: base64String, 
+                    media_type: mediaType 
+                })
             });
-
             const data = await res.json();
-
             if (res.ok) {
-                document.getElementById("expenseTitle").value = data.title || "";
-                document.getElementById("expenseAmount").value = data.amount || "";
-                document.getElementById("expenseCategory").value = data.category || "Other";
-                document.getElementById("expenseNotes").value = data.notes || "";
-                alert("Receipt scanned successfully!");
+                if(document.getElementById("expenseTitle")) document.getElementById("expenseTitle").value = data.title || "";
+                if(document.getElementById("expenseAmount")) document.getElementById("expenseAmount").value = data.amount || "";
+                if(document.getElementById("expenseCategory")) document.getElementById("expenseCategory").value = data.category || "Other";
+                if(document.getElementById("expenseNotes")) document.getElementById("expenseNotes").value = data.notes || "";
+                
+                alert("✅ Receipt scanned successfully!");
             } else {
                 alert("Receipt scan nahi ho saka — manually bharo");
             }
@@ -482,6 +481,7 @@ window.scanReceipt = async function() {
             alert("Receipt scan nahi ho saka — manually bharo");
         }
     };
+
     reader.readAsDataURL(file);
 };
 // ---------------------------Load Expense----------------------
