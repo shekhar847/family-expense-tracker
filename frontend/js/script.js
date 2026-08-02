@@ -509,7 +509,7 @@ function filterByDateRange() {
         item.style.display = (itemDate >= start && itemDate <= end) ? "" : "none";
     });
     document.getElementById("filterMonth").value = "all";
-    showToast("Date range filter lagaya gaya");
+    showToast("✅ Date range filter applied");
 }
 // ---------------------------FilterReport----------------------
 function filterReport() {
@@ -817,15 +817,15 @@ async function changePassword() {
     const confirmPassword = document.getElementById("confirmPassword").value.trim();
     const status = document.getElementById("passwordStatus");
     if (!oldPassword || !newPassword || !confirmPassword) {
-        showToast("Sab fields bharo", "danger");
+        showToast("Please fill in all fields", "danger");
         return;
     }
     if (newPassword !== confirmPassword) {
-        showToast("New password match nahi kar raha", "danger");
+        showToast("New passwords do not match", "danger");
         return;
     }
     if (newPassword.length < 6) {
-        showToast("Password kam se kam 6 characters ka hona chahiye", "danger");
+        showToast("Password must be at least 6 characters long", "danger");
         return;
     }
     try {
@@ -908,7 +908,7 @@ function processVoiceCommand(text) {
             showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
             showToast(`✅ ${title} — ₹${amount} tayar hai, Add button dabao!`);
         } else {
-            showToast("Amount nahi mila — dobara bolein", "danger");
+            showToast("Could not detect the amount. Please speak again.", "danger");
         }
     }
     // -------------------This Month-------------------
@@ -916,25 +916,25 @@ function processVoiceCommand(text) {
         document.getElementById("filterMonth").value = "this";
         filterByMonth();
         showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
-        showToast("✅ Is mahine ke kharche dikh rahe hain");
+        showToast("✅ Showing this month's expenses");
     }
     // -------------------Last Month-------------------
     else if (t.includes("पिछले महीने") || t.includes("pichle mahine") || t.includes("last month")) {
         document.getElementById("filterMonth").value = "last";
         filterByMonth();
         showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
-        showToast("✅ Pichle mahine ke kharche");
+        showToast("✅ Showing last month's expenses");
     }
     // -------------------PDF-------------------
     else if (t.includes("pdf") || t.includes("रिपोर्ट") || t.includes("report") || t.includes("download") || t.includes("डाउनलोड")) {
         showSection('reportSection', document.querySelector('[onclick*=reportSection]'));
         setTimeout(() => downloadReport(), 500);
-        showToast("✅ PDF download ho raha hai...");
+        showToast("📄 Downloading PDF...");
     }
     // -------------------Dashboard-------------------
     else if (t.includes("dashboard") || t.includes("डैशबोर्ड") || t.includes("home") || t.includes("होम")) {
         showSection('dashboardSection', document.querySelector('[onclick*=dashboardSection]'));
-        showToast("✅ Dashboard khul gaya");
+        showToast("✅ Dashboard loaded successfully!");
     }
     // -------------------Reports-------------------
     else if (t.includes("chart") || t.includes("चार्ट") || t.includes("graph") || t.includes("रिपोर्ट")) {
@@ -953,7 +953,7 @@ function processVoiceCommand(text) {
             localStorage.setItem("monthlyBudget", amount);
             document.getElementById("budgetInput").value = amount;
             checkBudget();
-            showToast(`✅ Budget ₹${amount} set ho gaya`);
+            showToast(`✅ Budget set to ₹${amount}`);
         }
     }
     // -------------------Logout-------------------
@@ -1089,7 +1089,7 @@ function downloadReport() {
 function downloadCSV() {
     const rows = document.querySelectorAll("#reportTableBody tr");
     if (rows.length === 0) {
-        showToast("Koi data nahi", "danger");
+        showToast("No data available", "danger");
         return;
     }
     let csv = "No,Title,Category,Amount,Date\n";
@@ -1106,7 +1106,7 @@ function downloadCSV() {
         csv += `${index + 1},${title},${category},${amount},${date}\n`;
     });
     if (!hasData) {
-        showToast("Koi visible data nahi", "danger");
+        showToast("No data available to show", "danger");
         return;
     }
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -1137,14 +1137,14 @@ function sendEmailReport() {
         count: count,
         highest_category: highest
     };
-    showToast("Email bhej rahe hain...");
+    showToast("Sending email...", "info");
     emailjs.send("service_fwocbkr", "template_8itfsjc", templateParams)
         .then(() => {
-            showToast("✅ Email bhej diya gaya!");
+            showToast("✅ Email sent successfully!", "success");
         })
         .catch((err) => {
             console.log(err);
-            showToast("Email bhejne mein error", "danger");
+            showToast("Failed to send email. Please try again.", "danger");
         });
 }
 // ---------------------------WhatsApp Share--------------------
@@ -1171,7 +1171,7 @@ function shareWhatsApp() {
 function saveBudget() {
     const budget = Number(document.getElementById("budgetInput").value);
     if (!budget || budget <= 0) {
-        showToast("Valid budget daalo", "danger");
+        showToast("Please enter a valid budget amount", "danger");
         return;
     }
     localStorage.setItem("monthlyBudget", budget);
@@ -1182,7 +1182,7 @@ function saveBudget() {
 async function addFamilyMember() {
     const name = document.getElementById("memberName").value.trim();
     if (!name) {
-        showToast("Naam likho", "danger");
+        showToast("Please enter a name", "danger");
         return;
     }
     if (!currentUser) {
@@ -1229,10 +1229,10 @@ async function loadFamilyMembers() {
     }
 }
 async function deleteFamilyMember(id) {
-    if (!confirm("Is member ko delete karo?")) return;
+    if (!confirm("Are you sure you want to remove this member?")) return;
     try {
         await fetch(`${BASE_URL}/delete-family-member/${id}`, { method: "DELETE" });
-        showToast("Member delete ho gaya", "danger");
+        showToast("Member successfully remove", "danger");
         loadFamilyMembers();
     } catch (err) {
         showToast("Error", "danger");
