@@ -230,7 +230,6 @@ app.post("/scan-receipt", async (req, res) => {
 
         const type = media_type || "image/jpeg";
         const isPdf = type.includes("pdf");
-
         const mediaContentBlock = isPdf ? {
             type: "document",
             source: {
@@ -246,8 +245,6 @@ app.post("/scan-receipt", async (req, res) => {
                 data: image_data
             }
         };
-
-        // 2. Anthropic API Call
         const response = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
@@ -273,21 +270,17 @@ app.post("/scan-receipt", async (req, res) => {
 
         const data = await response.json();
 
-        if (!response.ok) {
-            console.error("Anthropic API Error Details:", data);
-            return res.status(response.status).json({ 
+        if (!response.ok || !data.content) {
+            console.error("🔴 ANTHROPIC API ERROR DETAILS:", JSON.stringify(data, null, 2));
+            return res.status(400).json({ 
                 error: data.error?.message || "Anthropic API request failed" 
             });
         }
 
-        if (data.content && data.content[0] && data.content[0].text) {
-            const rawText = data.content[0].text;
-            const cleanedJson = rawText.replace(/```json|```/g, "").trim();
-            const parsed = JSON.parse(cleanedJson);
-            return res.json(parsed);
-        } else {
-            throw new Error("Invalid response format from Claude API");
-        }
+        const rawText = data.content[0].text;
+        const cleanedJson = rawText.replace(/```json|```/g, "").trim();
+        const parsed = JSON.parse(cleanedJson);
+        return res.json(parsed);
 
     } catch (err) {
         console.error("Server Scan Error:", err.message);
