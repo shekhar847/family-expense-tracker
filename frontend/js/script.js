@@ -268,6 +268,24 @@ function logout() {
     
     // allExpensesData clear karo
     allExpensesData = [];
+
+    // Budget input clear karo
+    const budgetInput = document.getElementById("budgetInput");
+    if (budgetInput) budgetInput.value = "";
+    
+    // Avatar reset karo
+    document.getElementById("userAvatar").innerText = "?";
+    document.getElementById("userAvatar").innerHTML = "?";
+    
+    // Avatar preview clear karo
+    const avatarPreview = document.getElementById("avatarPreview");
+    if (avatarPreview) { avatarPreview.src = ""; avatarPreview.style.display = "none"; }
+    
+    // Profile fields clear karo
+    const profileName = document.getElementById("profileName");
+    const profileEmail = document.getElementById("profileEmail");
+    if (profileName) profileName.value = "";
+    if (profileEmail) profileEmail.value = "";
 }
 // ---------------------------Add Expense-----------------------
 async function addExpense() {
