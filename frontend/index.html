@@ -314,6 +314,13 @@
                                 <input type="text" id="expenseNotes" placeholder="Add any extra details...">
                             </div>
                             <div>
+                                <label class="form-label">Scan Receipt</label>
+                                <input type="file" id="receiptInput" accept="image/*" capture="environment" style="display:none;" onchange="scanReceipt(this)">
+                                <button class="btn-ghost" onclick="document.getElementById('receiptInput').click()" style="width:100%;">
+                                    📷 Scan Receipt
+                                </button>
+                            </div>
+                            <div>
                                 <label class="form-label">Tag</label>
                                 <select id="expenseTag">
                                     <option value="">No Tag</option>
