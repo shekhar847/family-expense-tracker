@@ -109,7 +109,6 @@ async function loginUser() {
 let resetCodeStore = "";
 let storedEmail = "";
 
-// इसे global scope में रखा गया है ताकि HTML से सीधे कॉल हो सके
 window.showForgotPassword = function(show = true) {
     const loginCard = document.getElementById("loginCard");
     const forgotCard = document.getElementById("forgotCard");
