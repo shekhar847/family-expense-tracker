@@ -225,8 +225,29 @@ app.post("/scan-receipt", async (req, res) => {
     try {
         const { image_data, media_type } = req.body;
         if (!image_data) {
-            return res.status(400).json({ error: "Image data missing" });
+            return res.status(400).json({ error: "Image/PDF data missing" });
         }
+
+        const type = media_type || "image/jpeg";
+        const isPdf = type.includes("pdf");
+
+        const mediaContentBlock = isPdf ? {
+            type: "document",
+            source: {
+                type: "base64",
+                media_type: "application/pdf",
+                data: image_data
+            }
+        } : {
+            type: "image",
+            source: {
+                type: "base64",
+                media_type: type,
+                data: image_data
+            }
+        };
+
+        // 2. Anthropic API Call
         const response = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
@@ -240,22 +261,16 @@ app.post("/scan-receipt", async (req, res) => {
                 messages: [{
                     role: "user",
                     content: [
-                        { 
-                            type: "image", 
-                            source: { 
-                                type: "base64", 
-                                media_type: media_type || "image/jpeg", 
-                                data: image_data 
-                            } 
-                        },
+                        mediaContentBlock,
                         { 
                             type: "text", 
-                            text: `Analyze this receipt and respond ONLY in this JSON format: { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }` 
+                            text: `Analyze this receipt or expense document and respond ONLY in this JSON format: { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }` 
                         }
                     ]
                 }]
             })
         });
+
         const data = await response.json();
 
         if (!response.ok) {
@@ -264,6 +279,7 @@ app.post("/scan-receipt", async (req, res) => {
                 error: data.error?.message || "Anthropic API request failed" 
             });
         }
+
         if (data.content && data.content[0] && data.content[0].text) {
             const rawText = data.content[0].text;
             const cleanedJson = rawText.replace(/```json|```/g, "").trim();
@@ -272,6 +288,7 @@ app.post("/scan-receipt", async (req, res) => {
         } else {
             throw new Error("Invalid response format from Claude API");
         }
+
     } catch (err) {
         console.error("Server Scan Error:", err.message);
         res.status(500).json({ error: err.message });
