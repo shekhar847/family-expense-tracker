@@ -220,7 +220,7 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
     }
 });
 
-// -------------------Receipt Scan Route (OpenRouter Dynamic Vision)-------------------
+// -------------------Receipt Scan Route (Handles Image & PDF)-------------------
 app.post("/scan-receipt", async (req, res) => {
     try {
         const { image_data, media_type } = req.body;
@@ -233,106 +233,151 @@ app.post("/scan-receipt", async (req, res) => {
             return res.status(500).json({ error: "OPENROUTER_API_KEY missing in server variables" });
         }
 
-        const mimeType = media_type || "image/jpeg";
-        const base64Data = image_data.startsWith("data:") 
-            ? image_data 
-            : `data:${mimeType};base64,${image_data}`;
+        // Check if file is PDF
+        const isPdf = media_type === "application/pdf" || 
+                      image_data.startsWith("data:application/pdf") || 
+                      image_data.startsWith("JVBERi0");
 
-        // 1. OpenRouter से Live Active Models की लिस्ट dynamic तरह से प्राप्त करें
-        let freeVisionModels = [];
-        try {
-            const modelsRes = await fetch("https://openrouter.ai/api/v1/models");
-            const modelsData = await modelsRes.json();
-            if (modelsData && modelsData.data) {
-                freeVisionModels = modelsData.data
-                    .filter(m => 
-                        m.id.endsWith(":free") && 
-                        (
-                            m.architecture?.modality?.includes("image") || 
-                            m.architecture?.modality?.includes("multimodal") ||
-                            m.id.includes("vision") ||
-                            m.id.includes("gemini") ||
-                            m.id.includes("vl") ||
-                            m.id.includes("pixtral")
-                        )
-                    )
-                    .map(m => m.id);
+        if (isPdf) {
+            console.log("📄 Processing PDF Document...");
+            // Extract text from base64 PDF
+            const cleanBase64 = image_data.replace(/^data:application\/pdf;base64,/, "");
+            const pdfBuffer = Buffer.from(cleanBase64, 'base64').toString('binary');
+            
+            const extractedTextMatches = pdfBuffer.match(/\(([^)]+)\)/g);
+            let extractedText = "";
+            if (extractedTextMatches) {
+                extractedText = extractedTextMatches.map(t => t.replace(/[()]/g, '')).join(" ");
             }
-        } catch (e) {
-            console.log("Live models list fetch failed, using fallbacks:", e.message);
-        }
 
-        // 2. फ़ॉलबैक मॉडल्स (अगर Dynamic Fetch में देर हो)
-        const fallbackModels = [
-            "google/gemini-2.0-flash-lite-001:free",
-            "google/gemini-2.0-flash-001:free",
-            "qwen/qwen-2.5-vl-72b-instruct:free",
-            "mistralai/pixtral-12b:free"
-        ];
+            if (!extractedText || extractedText.length < 5) {
+                extractedText = pdfBuffer.replace(/[^\x20-\x7E]/g, ' ');
+            }
 
-        // दोनों लिस्ट को मिला कर Unique मॉडल्स बनाएँ
-        const modelsToTry = [...new Set([...freeVisionModels, ...fallbackModels])];
+            // Send extracted text to Llama 3.3 Text Model
+            const textResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${apiKey}`,
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://expense-tracker-backend-j2h7.onrender.com",
+                    "X-Title": "Expense Tracker"
+                },
+                body: JSON.stringify({
+                    model: "meta-llama/llama-3.3-70b-instruct:free",
+                    messages: [
+                        {
+                            role: "user",
+                            content: `Analyze this text extracted from an expense receipt or PDF report and respond ONLY in valid JSON format without markdown code blocks:
+{ "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }
 
-        let responseData = null;
-        let isSuccess = false;
+PDF Content:
+${extractedText}`
+                        }
+                    ],
+                    temperature: 0.1,
+                    response_format: { type: "json_object" }
+                })
+            });
 
-        for (const model of modelsToTry) {
+            const textData = await textResponse.json();
+
+            if (textResponse.ok && textData.choices && textData.choices[0]?.message?.content) {
+                const rawContent = textData.choices[0].message.content;
+                const cleanedJson = rawContent.replace(/```json|```/g, "").trim();
+                const parsed = JSON.parse(cleanedJson);
+                console.log("✅ PDF Parsed Successfully:", parsed);
+                return res.json(parsed);
+            } else {
+                throw new Error(textData.error?.message || "Failed to parse text from PDF");
+            }
+
+        } else {
+            // 🖼️ Processing Image (JPG/PNG)
+            console.log("🖼️ Processing Image Document...");
+            const mimeType = media_type || "image/jpeg";
+            const base64Data = image_data.startsWith("data:") 
+                ? image_data 
+                : `data:${mimeType};base64,${image_data}`;
+
+            const visionModels = [
+                "meta-llama/llama-3.2-11b-vision-instruct:free",
+                "google/gemini-2.0-flash-lite-001:free",
+                "qwen/qwen-2.5-vl-72b-instruct:free"
+            ];
+
+            let liveModels = [];
             try {
-                console.log(`Trying model: ${model}`);
-                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${apiKey}`,
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "https://expense-tracker-backend-j2h7.onrender.com",
-                        "X-Title": "Expense Tracker"
-                    },
-                    body: JSON.stringify({
-                        model: model,
-                        messages: [
-                            {
-                                role: "user",
-                                content: [
-                                    {
-                                        type: "text",
-                                        text: `Analyze this receipt or expense document and respond ONLY in valid JSON format without markdown code blocks:
-                                        { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }`
-                                    },
-                                    {
-                                        type: "image_url",
-                                        image_url: { url: base64Data }
-                                    }
-                                ]
-                            }
-                        ],
-                        temperature: 0.1,
-                        response_format: { type: "json_object" }
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.choices && data.choices[0]?.message?.content) {
-                    responseData = data;
-                    isSuccess = true;
-                    console.log(`✅ Scan successful using model: ${model}`);
-                    break;
-                } else {
-                    console.log(`⚠️ Model ${model} failed:`, data.error?.message || "No content returned");
+                const modelsRes = await fetch("https://openrouter.ai/api/v1/models");
+                const modelsData = await modelsRes.json();
+                if (modelsData?.data) {
+                    liveModels = modelsData.data
+                        .filter(m => m.id.endsWith(":free") && (m.id.includes("vision") || m.id.includes("vl") || m.id.includes("gemini") || m.id.includes("pixtral")))
+                        .map(m => m.id);
                 }
-            } catch (err) {
-                console.log(`⚠️ Error calling ${model}:`, err.message);
+            } catch (e) {}
+
+            const modelsToTry = [...new Set([...liveModels, ...visionModels])];
+
+            let responseData = null;
+            let isSuccess = false;
+
+            for (const model of modelsToTry) {
+                try {
+                    console.log(`Trying Image Vision Model: ${model}`);
+                    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${apiKey}`,
+                            "Content-Type": "application/json",
+                            "HTTP-Referer": "https://expense-tracker-backend-j2h7.onrender.com",
+                            "X-Title": "Expense Tracker"
+                        },
+                        body: JSON.stringify({
+                            model: model,
+                            messages: [
+                                {
+                                    role: "user",
+                                    content: [
+                                        {
+                                            type: "text",
+                                            text: `Analyze this receipt image and respond ONLY in valid JSON format without markdown code blocks:
+{ "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }`
+                                        },
+                                        {
+                                            type: "image_url",
+                                            image_url: { url: base64Data }
+                                        }
+                                    ]
+                                }
+                            ],
+                            temperature: 0.1,
+                            response_format: { type: "json_object" }
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.choices && data.choices[0]?.message?.content) {
+                        responseData = data;
+                        isSuccess = true;
+                        console.log(`✅ Image Scan successful using model: ${model}`);
+                        break;
+                    }
+                } catch (err) {
+                    console.log(`⚠️ Model ${model} failed:`, err.message);
+                }
             }
-        }
 
-        if (!isSuccess || !responseData) {
-            return res.status(400).json({ error: "Vision API failed with all available free models." });
-        }
+            if (!isSuccess || !responseData) {
+                return res.status(400).json({ error: "Image Vision API failed with available models." });
+            }
 
-        const rawContent = responseData.choices[0].message.content;
-        const cleanedJson = rawContent.replace(/```json|```/g, "").trim();
-        const parsed = JSON.parse(cleanedJson);
-        return res.json(parsed);
+            const rawContent = responseData.choices[0].message.content;
+            const cleanedJson = rawContent.replace(/```json|```/g, "").trim();
+            const parsed = JSON.parse(cleanedJson);
+            return res.json(parsed);
+        }
 
     } catch (err) {
         console.error("Server Scan Error:", err.message);
