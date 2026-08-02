@@ -220,7 +220,7 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
     }
 });
 
-// -------------------Receipt Scan Route-------------------
+// -------------------Receipt Scan Route (Google Gemini Free API)-------------------
 app.post("/scan-receipt", async (req, res) => {
     try {
         const { image_data, media_type } = req.body;
@@ -234,10 +234,8 @@ app.post("/scan-receipt", async (req, res) => {
         }
 
         const mimeType = media_type || "image/jpeg";
-
-        // Google Gemini Vision API Request
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        let response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -260,9 +258,29 @@ app.post("/scan-receipt", async (req, res) => {
             }
         );
 
-        const data = await response.json();
+        let data = await response.json();
 
-        if (!response.ok) {
+        if (!response.ok && data.error?.code === 404) {
+            console.log("Retrying with gemini-2.0-flash...");
+            response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { inline_data: { mime_type: mimeType, data: image_data } },
+                                { text: `Analyze this receipt or expense document and respond ONLY in valid JSON format without markdown blocks: { "title": "item or store name (max 30 chars)", "amount": "total amount as number only", "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other", "notes": "brief description (max 50 chars)" }` }
+                            ]
+                        }]
+                    })
+                }
+            );
+            data = await response.json();
+        }
+
+        if (!response.ok || !data.candidates) {
             console.error("🔴 GEMINI API ERROR DETAILS:", JSON.stringify(data, null, 2));
             return res.status(400).json({ 
                 error: data.error?.message || "Gemini API request failed" 
