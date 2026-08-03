@@ -236,8 +236,8 @@ app.post("/scan-receipt", async (req, res) => {
             return res.status(500).json({ error: "GEMINI_API_KEY missing in server environment variables" });
         }
 
-        // Updated Model Name for latest SDK compatibility
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        // Updated Model Name to latest Gemini 3.6 Flash
+        const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
 
         // Base64 cleaning
         const cleanBase64 = image_data.replace(/^data:(.*);base64,/, "");
