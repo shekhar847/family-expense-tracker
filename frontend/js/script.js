@@ -475,7 +475,12 @@ async function scanReceipt(input) {
                 const descInput = document.getElementById("description") || document.getElementById("expenseNotes");
 
                 if (titleInput) titleInput.value = data.title || "";
-                if (amountInput) amountInput.value = data.amount || "";
+                
+                if (amountInput) {
+                    const cleanAmount = data.amount ? String(data.amount).replace(/[^0-9.]/g, "") : "";
+                    amountInput.value = cleanAmount;
+                }
+
                 if (categoryInput) categoryInput.value = data.category || "Other";
                 if (descInput) descInput.value = data.notes || "";
 
