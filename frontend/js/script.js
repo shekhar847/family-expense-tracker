@@ -1095,6 +1095,10 @@ function toggleTheme() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
 }
 // ---------------------------Sidebar click  close----------------------
+function toggleSidebar() {
+    const sidebar = document.querySelector(".sidebar");
+    if (sidebar) sidebar.classList.toggle("open");
+}
 document.addEventListener("click", function(e) {
     const sidebar = document.querySelector(".sidebar");
     const hamburger = document.querySelector(".hamburger");
