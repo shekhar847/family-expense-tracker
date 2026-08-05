@@ -25,48 +25,45 @@
 
 <body>
 
-<!-- ------------------------------Sidebar Overlay------------------------------- -->
-<div id="sidebarOverlay" onclick="closeSidebar()" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:998; backdrop-filter: blur(2px);"></div>
-
-<!-- ------------------------------Sidebar------------------------------- -->
-<!-- Sidebar overlay ke upar aana chahiye, isliye iska z-index zyada (999) rakha hai -->
-<aside class="sidebar" style="position:relative; z-index:999;">
-    <div class="sidebar-brand">
-        <div class="brand-pill">
-            <div class="brand-icon">💰</div>
-            <span class="brand-name">ExpenseIQ</span>
-        </div>
-    </div>
-    <nav class="sidebar-nav">
-        <div class="nav-label">Menu</div>
-        <div class="nav-item active" onclick="showSection('dashboardSection', this)">
-            <span class="nav-icon">📊</span> Dashboard
-        </div>
-        <div class="nav-item" onclick="showSection('expenseSection', this)">
-            <span class="nav-icon">💸</span> Expenses
-        </div>
-        <div class="nav-item" onclick="showSection('reportSection', this)">
-            <span class="nav-icon">📈</span> Reports
-        </div>
-        <div class="nav-item" onclick="showSection('settingSection', this)">
-            <span class="nav-icon">⚙️</span> Settings
-        </div>
-    </nav>
-    
-    <div class="sidebar-user" id="sidebarUser" style="display:none;">
-        <div class="user-card">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                <div class="user-avatar" id="userAvatar">?</div>
-                <div class="user-info">
-                    <div class="user-name" id="userName">Guest User</div>
-                    <div class="user-email" id="userEmail">Not logged in</div>
-                </div>
+    <!-- ------------------------------Sidebar------------------------------- -->
+    <aside class="sidebar" style="position:relative; z-index:999;">
+        <div class="sidebar-brand">
+            <div class="brand-pill">
+                <div class="brand-icon">💰</div>
+                <span class="brand-name">ExpenseIQ</span>
             </div>
-            <button class="btn-logout" onclick="logout()">Sign out</button>
         </div>
-    </div>
-</aside>
-
+        <nav class="sidebar-nav">
+            <div class="nav-label">Menu</div>
+            <div class="nav-item active" onclick="showSection('dashboardSection', this)">
+                <span class="nav-icon">📊</span> Dashboard
+            </div>
+            <div class="nav-item" onclick="showSection('expenseSection', this)">
+                <span class="nav-icon">💸</span> Expenses
+            </div>
+            <div class="nav-item" onclick="showSection('reportSection', this)">
+                <span class="nav-icon">📈</span> Reports
+            </div>
+            <div class="nav-item" onclick="showSection('settingSection', this)">
+                <span class="nav-icon">⚙️</span> Settings
+            </div>
+        </nav>
+        
+        <div class="sidebar-user" id="sidebarUser" style="display:none;">
+            <div class="user-card">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <div class="user-avatar" id="userAvatar">?</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">Guest User</div>
+                        <div class="user-email" id="userEmail">Not logged in</div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="logout()">Sign out</button>
+            </div>
+        </div>
+    </aside>
+    <!-- ------------------------------Sidebar Overlay----------------------- -->
+    <div id="sidebarOverlay" onclick="closeSidebar()" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:998; backdrop-filter: blur(2px);"></div>
     <!-- ------------------------------Main Topbar (Dashboard)--------------- -->
     <div class="main">
         <div class="topbar">
