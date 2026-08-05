@@ -1094,6 +1094,17 @@ function toggleTheme() {
     if (btn) btn.textContent = isDark ? '☀' : '🌙';
     localStorage.setItem("theme", isDark ? "dark" : "light");
 }
+// ---------------------------Sidebar click  close----------------------
+document.addEventListener("click", function(e) {
+    const sidebar = document.querySelector(".sidebar");
+    const hamburger = document.querySelector(".hamburger");
+    
+    if (sidebar && sidebar.classList.contains("open")) {
+        if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+            sidebar.classList.remove("open");
+        }
+    }
+});
 // ---------------------------Voice Assistant-------------------
 function startVoice() {
     const btn = document.getElementById("voiceBtn");
