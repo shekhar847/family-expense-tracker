@@ -20,6 +20,31 @@ function toggleSidebar() {
     sidebar.classList.toggle("open");
 }
 // ---------------------------Section---------------------------
+window.toggleSidebar = function() {
+    const sidebar = document.querySelector(".sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    
+    if (sidebar) {
+        sidebar.classList.toggle("open");
+    }
+    
+    if (overlay && sidebar) {
+        overlay.style.display = sidebar.classList.contains("open") ? "block" : "none";
+    }
+};
+
+window.closeSidebar = function() {
+    const sidebar = document.querySelector(".sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    
+    if (sidebar) {
+        sidebar.classList.remove("open");
+    }
+    if (overlay) {
+        overlay.style.display = "none";
+    }
+};
+
 function showSection(id, el = null) {
     document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
     document.getElementById(id).classList.add("active");
@@ -31,11 +56,8 @@ function showSection(id, el = null) {
     const landingPage = document.getElementById("landingPage");
     if (landingPage) landingPage.style.display = "none";
 
-    const sidebar = document.querySelector(".sidebar");
-    if (sidebar) sidebar.classList.remove("open");
-    
-    const overlay = document.getElementById("sidebarOverlay");
-    if (overlay) overlay.style.display = "none";
+    // ✅ यहाँ हमने सीधे फंक्शन कॉल कर दिया, जिससे कोड रिपीट नहीं हुआ
+    window.closeSidebar(); 
 
     // -----------------------Report Open-----------------------
     if (id === "reportSection") {
@@ -45,6 +67,7 @@ function showSection(id, el = null) {
             loadMonthlyComparison();
         }, 300);
     }
+    
     if (id === "settingSection" && currentUser) {
         document.getElementById("profileName").value = currentUser.name || "";
         document.getElementById("profileEmail").value = currentUser.email || "";
@@ -53,6 +76,7 @@ function showSection(id, el = null) {
             document.getElementById("budgetInput").value = savedBudget;
         }
     }
+    
     localStorage.setItem("activeSection", id);
 }
 // ---------------------------Toast-----------------------------
@@ -1102,30 +1126,7 @@ function toggleTheme() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
 }
 // ---------------------------Sidebar Toggle & Close----------------------
-window.toggleSidebar = function() {
-    const sidebar = document.querySelector(".sidebar");
-    const overlay = document.getElementById("sidebarOverlay");
-    
-    if (sidebar) {
-        sidebar.classList.toggle("open");
-    }
-    
-    if (overlay && sidebar) {
-        overlay.style.display = sidebar.classList.contains("open") ? "block" : "none";
-    }
-};
 
-window.closeSidebar = function() {
-    const sidebar = document.querySelector(".sidebar");
-    const overlay = document.getElementById("sidebarOverlay");
-    
-    if (sidebar) {
-        sidebar.classList.remove("open");
-    }
-    if (overlay) {
-        overlay.style.display = "none";
-    }
-};
 // ---------------------------Voice Assistant-------------------
 function startVoice() {
     const btn = document.getElementById("voiceBtn");
