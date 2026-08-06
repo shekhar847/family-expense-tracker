@@ -178,6 +178,24 @@ body {
 .btn-logout:hover {
     background: rgba(255, 92, 92, 0.2);
 }
+/* -------------------Sidebar fix--------------------- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px; /* Sidebar ki width */
+    height: 100vh;
+    z-index: 99;
+    background-color: var(--bg2, #1e1e1e);
+    transition: transform 0.3s ease; /* Mobile animation ke liye */
+}
+.main-content {
+    margin-left: 250px !important; /* Sidebar jitni jagah chhodega */
+    width: calc(100% - 250px) !important; /* Baaki bachi width lega */
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
 /* -------------------Main---------------------- */
 .main {
     margin-left: var(--sidebar-w);
