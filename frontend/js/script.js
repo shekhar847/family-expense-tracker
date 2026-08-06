@@ -1102,18 +1102,31 @@ function toggleTheme() {
     if (btn) btn.textContent = isDark ? '☀' : '🌙';
     localStorage.setItem("theme", isDark ? "dark" : "light");
 }
-// ---------------------------Sidebar click  close----------------------
-function toggleSidebar() {
+// ---------------------------Sidebar Toggle & Close----------------------
+window.toggleSidebar = function() {
     const sidebar = document.querySelector(".sidebar");
     const overlay = document.getElementById("sidebarOverlay");
-    sidebar.classList.toggle("open");
-    overlay.style.display = sidebar.classList.contains("open") ? "block" : "none";
-}
+    
+    if (sidebar) {
+        sidebar.classList.toggle("open");
+    }
+    
+    if (overlay && sidebar) {
+        overlay.style.display = sidebar.classList.contains("open") ? "block" : "none";
+    }
+};
 
-function closeSidebar() {
-    document.querySelector(".sidebar").classList.remove("open");
-    document.getElementById("sidebarOverlay").style.display = "none";
-}
+window.closeSidebar = function() {
+    const sidebar = document.querySelector(".sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    
+    if (sidebar) {
+        sidebar.classList.remove("open");
+    }
+    if (overlay) {
+        overlay.style.display = "none";
+    }
+};
 // ---------------------------Voice Assistant-------------------
 function startVoice() {
     const btn = document.getElementById("voiceBtn");
