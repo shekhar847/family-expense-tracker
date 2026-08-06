@@ -32,7 +32,6 @@ body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
     color: var(--text);
-    display: flex;
     min-height: 100vh;
     font-size: 14px;
     overflow-x: hidden;
