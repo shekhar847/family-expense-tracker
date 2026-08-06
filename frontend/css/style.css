@@ -32,7 +32,7 @@ body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
     color: var(--text);
-    display: block; 
+    display: flex;
     min-height: 100vh;
     font-size: 14px;
     overflow-x: hidden;
@@ -181,7 +181,7 @@ body {
 /* -------------------Main---------------------- */
 .main {
     margin-left: var(--sidebar-w);
-    width: auto;
+    flex: 1;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
