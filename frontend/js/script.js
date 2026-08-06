@@ -29,6 +29,12 @@ function showSection(id, el = null) {
     }
     const sidebar = document.querySelector(".sidebar");
     if (sidebar) sidebar.classList.remove("open");
+    
+    // Yahan apna naya code add karein
+    const overlay = document.getElementById("sidebarOverlay");
+    if (overlay) overlay.style.display = "none";
+
+    // -----------------------Report Open-----------------------
 
     // -----------------------Report Open-----------------------
     if (id === "reportSection") {
@@ -1098,19 +1104,13 @@ function toggleTheme() {
 function toggleSidebar() {
     const sidebar = document.querySelector(".sidebar");
     const overlay = document.getElementById("sidebarOverlay");
-    if (sidebar) {
-        sidebar.classList.toggle("open");
-        if (overlay) {
-            overlay.style.display = sidebar.classList.contains("open") ? "block" : "none";
-        }
-    }
+    sidebar.classList.toggle("open");
+    overlay.style.display = sidebar.classList.contains("open") ? "block" : "none";
 }
 
 function closeSidebar() {
-    const sidebar = document.querySelector(".sidebar");
-    const overlay = document.getElementById("sidebarOverlay");
-    if (sidebar) sidebar.classList.remove("open");
-    if (overlay) overlay.style.display = "none";
+    document.querySelector(".sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").style.display = "none";
 }
 // ---------------------------Voice Assistant-------------------
 function startVoice() {
