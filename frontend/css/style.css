@@ -829,15 +829,18 @@ body.light {
 }
 
 @media (max-width: 768px) {
+    /* Flexbox hata kar layout fix kiya */
     body {
         display: block !important; 
+        width: 100% !important;
+        max-width: 100vw !important;
         overflow-x: hidden !important;
-        width: 100vw !important;
+        margin: 0; padding: 0;
     }
     
     .sidebar {
         position: fixed !important;
-        left: -100% !important; 
+        left: -260px !important; /* Sidebar ko poori tarah bahar chhupaya */
         width: 240px !important;
         transition: left 0.3s ease !important;
         z-index: 1000 !important;
@@ -850,20 +853,19 @@ body.light {
     .main {
         margin-left: 0 !important;
         width: 100% !important;
-        max-width: 100vw !important;
+        max-width: 100% !important; /* Left se cut hone se rokega */
+        overflow-x: hidden !important;
+        display: block !important;
     }
     
     .topbar {
         padding: 0 16px !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
     }
 
     .content-area {
+        padding: 16px !important;
         width: 100% !important;
-        padding: 16px !important; 
         box-sizing: border-box !important;
-        overflow-x: hidden !important;
     }
     
     .hamburger {
@@ -896,8 +898,10 @@ body.light {
 }
 
 @media (max-width: 600px) {
+    /* Mobile par saare cards ek ke neeche ek aayenge */
     .stat-grid {
         grid-template-columns: 1fr !important;
+        gap: 12px !important;
     }
     .content-area {
         padding: 12px !important;
