@@ -178,31 +178,16 @@ body {
 .btn-logout:hover {
     background: rgba(255, 92, 92, 0.2);
 }
-/* -------------------Sidebar fix--------------------- */
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 250px; /* Sidebar ki width */
-    height: 100vh;
-    z-index: 99;
-    background-color: var(--bg2, #1e1e1e);
-    transition: transform 0.3s ease; /* Mobile animation ke liye */
-}
-.main-content {
-    margin-left: 250px !important; /* Sidebar jitni jagah chhodega */
-    width: calc(100% - 250px) !important; /* Baaki bachi width lega */
-    min-height: 100vh;
-    padding: 20px;
-    box-sizing: border-box;
-}
+
 /* -------------------Main---------------------- */
 .main {
     margin-left: var(--sidebar-w);
+    width: calc(100% - var(--sidebar-w));
     flex: 1;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
 }
 .topbar {
     background: var(--bg2);
@@ -480,6 +465,19 @@ select option {
     to { opacity: 1; transform: translateX(0); }
 }
 /* -------------------Login Section----------------- */
+#landingPage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .login-wrapper {
     max-width: 400px;
     margin: 0 auto;
@@ -487,10 +485,12 @@ select option {
     padding: 0 12px;
     box-sizing: border-box;
 }
+
 .login-header {
     text-align: center;
     margin-bottom: 28px;
 }
+
 .login-icon {
     width: 52px;
     height: 52px;
@@ -503,12 +503,14 @@ select option {
     font-size: 22px;
     margin: 0 auto 14px;
 }
+
 .login-title {
     font-family: 'Syne', sans-serif;
     font-size: 22px;
     font-weight: 800;
     margin-bottom: 4px;
 }
+
 .login-sub {
     color: var(--text2);
     font-size: 13px;
