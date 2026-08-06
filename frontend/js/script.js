@@ -36,7 +36,6 @@ function showSection(id, el = null) {
     
     const overlay = document.getElementById("sidebarOverlay");
     if (overlay) overlay.style.display = "none";
-}
 
     // -----------------------Report Open-----------------------
     if (id === "reportSection") {
