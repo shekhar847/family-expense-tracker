@@ -828,24 +828,36 @@ body.light {
     }
 }
 @media (max-width: 768px) {
+    /* 1. Sidebar ko mobile pe chhipana */
     .sidebar {
-        position: fixed;
-        left: -100%; 
-        width: 240px;
+        position: fixed !important;
+        left: -100% !important; 
+        width: 240px !important;
         transition: left 0.3s ease;
         z-index: 999;
     }
     .sidebar.open {
-        left: 0;
+        left: 0 !important;
     }
+    
+    /* 2. Main content ka extra margin hatana */
     .main {
-        margin-left: 0;
-        width: 100%;
+        margin-left: 0 !important;
+        width: 100% !important;
     }
+    
     .content-area {
-        width: 100%;
+        width: 100% !important;
         overflow-x: hidden;
+        padding: 16px !important; 
     }
+    
+    /* 3. Hamburger button ko mobile pe dikhana */
+    .hamburger {
+        display: block !important; 
+    }
+
+    /* 4. Table responsive fix */
     .report-table thead {
         display: none;
     }
