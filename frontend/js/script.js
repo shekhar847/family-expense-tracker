@@ -20,44 +20,15 @@ function toggleSidebar() {
     sidebar.classList.toggle("open");
 }
 // ---------------------------Section---------------------------
-window.toggleSidebar = function() {
-    const sidebar = document.querySelector(".sidebar");
-    const overlay = document.getElementById("sidebarOverlay");
-    
-    if (sidebar) {
-        sidebar.classList.toggle("open");
-    }
-    
-    if (overlay && sidebar) {
-        overlay.style.display = sidebar.classList.contains("open") ? "block" : "none";
-    }
-};
-
-window.closeSidebar = function() {
-    const sidebar = document.querySelector(".sidebar");
-    const overlay = document.getElementById("sidebarOverlay");
-    
-    if (sidebar) {
-        sidebar.classList.remove("open");
-    }
-    if (overlay) {
-        overlay.style.display = "none";
-    }
-};
-
 function showSection(id, el = null) {
     document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
     document.getElementById(id).classList.add("active");
     document.querySelectorAll(".nav-item").forEach(nav => nav.classList.remove("active"));
-    
     if (el) {
         el.classList.add("active");
     }
-    const landingPage = document.getElementById("landingPage");
-    if (landingPage) landingPage.style.display = "none";
-
-    // ✅ यहाँ हमने सीधे फंक्शन कॉल कर दिया, जिससे कोड रिपीट नहीं हुआ
-    window.closeSidebar(); 
+    const sidebar = document.querySelector(".sidebar");
+    if (sidebar) sidebar.classList.remove("open");
 
     // -----------------------Report Open-----------------------
     if (id === "reportSection") {
@@ -67,7 +38,6 @@ function showSection(id, el = null) {
             loadMonthlyComparison();
         }, 300);
     }
-    
     if (id === "settingSection" && currentUser) {
         document.getElementById("profileName").value = currentUser.name || "";
         document.getElementById("profileEmail").value = currentUser.email || "";
@@ -76,7 +46,6 @@ function showSection(id, el = null) {
             document.getElementById("budgetInput").value = savedBudget;
         }
     }
-    
     localStorage.setItem("activeSection", id);
 }
 // ---------------------------Toast-----------------------------
@@ -140,7 +109,7 @@ async function loginUser() {
 let resetCodeStore = "";
 let storedEmail = "";
 
-window.showForgotPassword = function(show = true) {
+window.showForgotPassword = function (show = true) {
     const loginCard = document.getElementById("loginCard");
     const forgotCard = document.getElementById("forgotCard");
     const forgotStep1 = document.getElementById("forgotStep1");
@@ -155,19 +124,19 @@ window.showForgotPassword = function(show = true) {
     storedEmail = "";
 };
 
-window.sendResetCode = async function() {
+window.sendResetCode = async function () {
     const emailInput = document.getElementById("forgotEmail");
     if (!emailInput) return;
-    
+
     const email = emailInput.value.trim();
     if (!email) {
         showToast("Please enter your email", "danger");
         return;
     }
-    
+
     storedEmail = email;
     resetCodeStore = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     try {
         await emailjs.send("service_fwocbkr", "template_8itfsjc", {
             to_name: "User",
@@ -178,7 +147,7 @@ window.sendResetCode = async function() {
             highest_category: `Your Password Reset Code: ${resetCodeStore}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.`
         });
         showToast("Reset code sent successfully!");
-        
+
         const step1 = document.getElementById("forgotStep1");
         const step2 = document.getElementById("forgotStep2");
         if (step1) step1.style.display = "none";
@@ -189,10 +158,10 @@ window.sendResetCode = async function() {
     }
 };
 
-window.verifyResetCode = async function() {
+window.verifyResetCode = async function () {
     const codeInput = document.getElementById("resetCode");
     const passwordInput = document.getElementById("newResetPassword");
-    
+
     if (!codeInput || !passwordInput) return;
 
     const code = codeInput.value.trim();
@@ -211,7 +180,7 @@ window.verifyResetCode = async function() {
         showToast("Password must be at least 6 characters long", "danger");
         return;
     }
-    
+
     try {
         const res = await fetch(`${BASE_URL}/reset-password`, {
             method: "POST",
@@ -219,7 +188,7 @@ window.verifyResetCode = async function() {
             body: JSON.stringify({ email, new_password: newPassword })
         });
         const data = await res.json();
-        
+
         if (res.ok && data.message === "Password reset successful") {
             showToast("✅ Password reset successfully! Please log in.");
             showForgotPassword(false);
@@ -327,7 +296,7 @@ function logout() {
     currentUser = null;
     localStorage.removeItem("currentUser");
     localStorage.removeItem("activeSection");
-    
+
     // Data clear karo
     document.getElementById("userName").innerText = "Guest User";
     document.getElementById("userEmail").innerText = "Not logged in";
@@ -337,31 +306,31 @@ function logout() {
     document.getElementById("loginCard").style.display = "none";
     document.getElementById("sidebarUser").style.display = "none";
     document.getElementById("footerBadges").style.display = "none";
-    
+
     // Email password clear karo
     document.getElementById("email").value = "";
     document.getElementById("password").value = "";
-    
+
     // Stats reset karo
     document.getElementById("statTotal").innerText = "0";
     document.getElementById("statMonth").innerText = "0";
     document.getElementById("statCount").innerText = "0";
     document.getElementById("statAvg").innerText = "0";
-    
+
     // Expense list clear karo
     document.getElementById("expenseListContainer").innerHTML = `
         <div class="empty-state">
             <div class="empty-state-icon">📊</div>
             <p>No expenses recorded yet.</p>
         </div>`;
-    
+
     // Family summary clear karo
     const familySummary = document.getElementById("familySummary");
     if (familySummary) familySummary.style.display = "none";
-    
+
     // Dashboard section active karo
     showSection("dashboardSection", document.querySelector('[onclick*="dashboardSection"]'));
-    
+
     showToast("Logged out", "danger");
 
     // Charts clear karo
@@ -369,46 +338,46 @@ function logout() {
     if (window.pieChartInst) { window.pieChartInst.destroy(); window.pieChartInst = null; }
     if (window.miniChartInst) { window.miniChartInst.destroy(); window.miniChartInst = null; }
     if (window.trendChartInst) { window.trendChartInst.destroy(); window.trendChartInst = null; }
-    
+
     // Report table clear karo
     const reportBody = document.getElementById("reportTableBody");
     if (reportBody) reportBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text3);">No data available</td></tr>`;
-    
+
     // Recent expenses clear karo
     const recentExp = document.getElementById("recentExpenses");
     if (recentExp) recentExp.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗒</div><p>No expenses yet</p></div>`;
-    
+
     // Family members list clear karo
     const famList = document.getElementById("familyMembersList");
     if (famList) famList.innerHTML = "";
-    
+
     // Budget status clear karo
     const budgetStatus = document.getElementById("budgetStatus");
     if (budgetStatus) budgetStatus.innerHTML = "";
-    
+
     // Budget progress clear karo
     const budgetCard = document.getElementById("budgetProgressCard");
     if (budgetCard) budgetCard.style.display = "none";
-    
+
     // highestCat clear karo
     const highestCat = document.getElementById("highestCat");
     if (highestCat) highestCat.innerText = "";
-    
+
     // allExpensesData clear karo
     allExpensesData = [];
 
     // Budget input clear karo
     const budgetInput = document.getElementById("budgetInput");
     if (budgetInput) budgetInput.value = "";
-    
+
     // Avatar reset karo
     document.getElementById("userAvatar").innerText = "?";
     document.getElementById("userAvatar").innerHTML = "?";
-    
+
     // Avatar preview clear karo
     const avatarPreview = document.getElementById("avatarPreview");
     if (avatarPreview) { avatarPreview.src = ""; avatarPreview.style.display = "none"; }
-    
+
     // Profile fields clear karo
     const profileName = document.getElementById("profileName");
     const profileEmail = document.getElementById("profileEmail");
@@ -483,17 +452,17 @@ async function scanReceipt(input) {
 
     const file = input.files[0];
     const reader = new FileReader();
-    
-    reader.onload = async function(e) {
+
+    reader.onload = async function (e) {
         const base64String = e.target.result.split(',')[1];
         const mediaType = file.type || "image/jpeg";
         try {
             const res = await fetch(`${BASE_URL}/scan-receipt`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    image_data: base64String, 
-                    media_type: mediaType 
+                body: JSON.stringify({
+                    image_data: base64String,
+                    media_type: mediaType
                 })
             });
 
@@ -506,7 +475,7 @@ async function scanReceipt(input) {
                 const descInput = document.getElementById("description") || document.getElementById("expenseNotes");
 
                 if (titleInput) titleInput.value = data.title || "";
-                
+
                 if (amountInput) {
                     const cleanAmount = data.amount ? String(data.amount).replace(/[^0-9.]/g, "") : "";
                     amountInput.value = cleanAmount;
@@ -535,11 +504,11 @@ async function loadExpenses() {
         document.getElementById("loadingSpinner").style.display = "block";
         const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}?page=1&limit=100`);
         const response = await res.json();
-        
+
         // Pagination response handle karo
         const data = response.expenses || response;
         allExpensesData = data;
-        
+
         document.getElementById("loadingSpinner").style.display = "none";
         renderExpenseList(data);
         updateStats(data);
@@ -1125,8 +1094,6 @@ function toggleTheme() {
     if (btn) btn.textContent = isDark ? '☀' : '🌙';
     localStorage.setItem("theme", isDark ? "dark" : "light");
 }
-// ---------------------------Sidebar Toggle & Close----------------------
-
 // ---------------------------Voice Assistant-------------------
 function startVoice() {
     const btn = document.getElementById("voiceBtn");
@@ -1624,12 +1591,3 @@ document.getElementById("category").addEventListener("change", function () {
         customGroup.style.display = "none";
     }
 });
-
-// Service Worker Register karo
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('SW registered'))
-            .catch(err => console.log('SW error:', err));
-    });
-}
