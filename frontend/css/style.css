@@ -827,37 +827,50 @@ body.light {
         grid-template-columns: 1fr;
     }
 }
+
 @media (max-width: 768px) {
-    /* 1. Sidebar ko mobile pe chhipana */
+    body {
+        display: block !important; 
+        overflow-x: hidden !important;
+        width: 100vw !important;
+    }
+    
     .sidebar {
         position: fixed !important;
         left: -100% !important; 
         width: 240px !important;
-        transition: left 0.3s ease;
-        z-index: 999;
+        transition: left 0.3s ease !important;
+        z-index: 1000 !important;
     }
+    
     .sidebar.open {
         left: 0 !important;
     }
     
-    /* 2. Main content ka extra margin hatana */
     .main {
         margin-left: 0 !important;
         width: 100% !important;
+        max-width: 100vw !important;
     }
     
+    .topbar {
+        padding: 0 16px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
     .content-area {
         width: 100% !important;
-        overflow-x: hidden;
         padding: 16px !important; 
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
     }
     
-    /* 3. Hamburger button ko mobile pe dikhana */
     .hamburger {
         display: block !important; 
     }
 
-    /* 4. Table responsive fix */
+    /* Table responsive fix */
     .report-table thead {
         display: none;
     }
@@ -881,15 +894,13 @@ body.light {
         color: var(--text2);
     }
 }
+
 @media (max-width: 600px) {
     .stat-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
     }
     .content-area {
-        padding: 16px;
-    }
-    .topbar {
-        padding: 0 16px;
+        padding: 12px !important;
     }
     footer {
         padding: 20px;
