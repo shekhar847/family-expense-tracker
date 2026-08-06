@@ -24,17 +24,19 @@ function showSection(id, el = null) {
     document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
     document.getElementById(id).classList.add("active");
     document.querySelectorAll(".nav-item").forEach(nav => nav.classList.remove("active"));
+    
     if (el) {
         el.classList.add("active");
     }
+    const landingPage = document.getElementById("landingPage");
+    if (landingPage) landingPage.style.display = "none";
+
     const sidebar = document.querySelector(".sidebar");
     if (sidebar) sidebar.classList.remove("open");
     
-    // Yahan apna naya code add karein
     const overlay = document.getElementById("sidebarOverlay");
     if (overlay) overlay.style.display = "none";
-
-    // -----------------------Report Open-----------------------
+}
 
     // -----------------------Report Open-----------------------
     if (id === "reportSection") {
