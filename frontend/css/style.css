@@ -182,12 +182,10 @@ body {
 /* -------------------Main---------------------- */
 .main {
     margin-left: var(--sidebar-w);
-    width: calc(100% - var(--sidebar-w));
     flex: 1;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    box-sizing: border-box;
 }
 .topbar {
     background: var(--bg2);
