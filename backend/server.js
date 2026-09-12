@@ -5,25 +5,31 @@ const { OAuth2Client } = require("google-auth-library");
 const pool = require("./db");
 const authRoutes = require("./routes/authRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
+const loanRoutes = require("./routes/loanRoutes");
+const bcrypt = require('bcryptjs');
+
+// ------------------- Gemini AI Setup -------------------
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const app = express();
 const googleClient = new OAuth2Client("716678461904-1kul91j20k4v9jql1e1ao88p8ev1acg9.apps.googleusercontent.com");
 
 // -------------------Cloudinary Config---------------
 cloudinary.config({
-  cloud_name: "dsa7qrchz",
-  api_key: "674292933575328",
-  api_secret: "SYeGO96IWZZfWE9r_u4Rs-abl5o"
+    cloud_name: "dsa7qrchz",
+    api_key: "674292933575328",
+    api_secret: "SYeGO96IWZZfWE9r_u4Rs-abl5o"
 });
 
 // -------------------Middleware----------------------
 app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
-  allowedHeaders: ["Content-Type"]
+    origin: "*",
+    methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
+    allowedHeaders: ["Content-Type"]
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // -------------------Google Login-------------------
 app.post("/google-login", async (req, res) => {
@@ -36,13 +42,11 @@ app.post("/google-login", async (req, res) => {
         const payload = ticket.getPayload();
         const { name, email, picture } = payload;
 
-        // User check karo ya banao
         let userResult = await pool.query(
             "SELECT * FROM public.users WHERE email = $1", [email]
         );
 
         if (userResult.rows.length === 0) {
-            // Naya user banao
             userResult = await pool.query(
                 "INSERT INTO public.users (name, email, password, avatar) VALUES ($1, $2, $3, $4) RETURNING *",
                 [name, email, "google-oauth", picture]
@@ -59,11 +63,12 @@ app.post("/google-login", async (req, res) => {
         res.status(500).json({ message: "Google Login failed", error: err.message });
     }
 });
+
 // -------------------Create Tables-------------------
 pool.query(`CREATE TABLE IF NOT EXISTS public.users (
   id SERIAL PRIMARY KEY, name TEXT, email TEXT UNIQUE, password TEXT
 )`).then(() => console.log("users table ready"))
-  .catch(err => console.log("users table error:", err.message));
+    .catch(err => console.log("users table error:", err.message));
 
 pool.query(`CREATE TABLE IF NOT EXISTS public.expenses (
   id SERIAL PRIMARY KEY, user_id INTEGER, title TEXT,
@@ -71,15 +76,16 @@ pool.query(`CREATE TABLE IF NOT EXISTS public.expenses (
   date DATE DEFAULT CURRENT_DATE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`).then(() => console.log("expenses table ready"))
-  .catch(err => console.log("expenses table error:", err.message));
+    .catch(err => console.log("expenses table error:", err.message));
 
 pool.query(`ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar TEXT`)
-  .then(() => console.log("avatar column ready"))
-  .catch(err => console.log("avatar column error:", err.message));
+    .then(() => console.log("avatar column ready"))
+    .catch(err => console.log("avatar column error:", err.message));
 
 pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT ''`)
-  .then(() => console.log("notes column ready"))
-  .catch(err => console.log("notes column error:", err.message));
+    .then(() => console.log("notes column ready"))
+    .catch(err => console.log("notes column error:", err.message));
+
 // -------------------Family Members Table------------
 pool.query(`CREATE TABLE IF NOT EXISTS public.family_members (
   id SERIAL PRIMARY KEY,
@@ -87,30 +93,70 @@ pool.query(`CREATE TABLE IF NOT EXISTS public.family_members (
   name TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`).then(() => console.log("family_members table ready"))
-  .catch(err => console.log("family_members table error:", err.message));
+    .catch(err => console.log("family_members table error:", err.message));
 
 pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS member_id INTEGER`)
-  .then(() => console.log("member_id column ready"))
-  .catch(err => console.log("member_id column error:", err.message));
+    .then(() => console.log("member_id column ready"))
+    .catch(err => console.log("member_id column error:", err.message));
 
 pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS member_name TEXT DEFAULT 'Self'`)
-  .then(() => console.log("member_name column ready"))
-  .catch(err => console.log("member_name column error:", err.message));
+    .then(() => console.log("member_name column ready"))
+    .catch(err => console.log("member_name column error:", err.message));
 
 pool.query(`ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS tag TEXT DEFAULT ''`)
-  .then(() => console.log("tag column ready"))
-  .catch(err => console.log("tag column error:", err.message));
+    .then(() => console.log("tag column ready"))
+    .catch(err => console.log("tag column error:", err.message));
+
+// -------------------Loans / Udhar Table-------------
+pool.query(`CREATE TABLE IF NOT EXISTS public.loans (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER,
+  person_name TEXT,
+  type TEXT,
+  amount NUMERIC(10,2),
+  status TEXT DEFAULT 'Pending',
+  date DATE DEFAULT CURRENT_DATE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`).then(() => console.log("loans table ready"))
+    .catch(err => console.log("loans table error:", err.message));
+
+// -------------------Reset Password API-------------------
+app.post("/reset-password", async (req, res) => {
+    try {
+        const { email, new_password } = req.body;
+        if (!email || !new_password) {
+            return res.status(400).json({ message: "All fields required" });
+        }
+        const userResult = await pool.query(
+            "SELECT * FROM public.users WHERE email = $1",
+            [email.trim().toLowerCase()]
+        );
+        if (userResult.rows.length === 0) {
+            return res.status(400).json({ message: "Email not found" });
+        }
+        const hashedPassword = await bcrypt.hash(new_password, 10);
+        await pool.query(
+            "UPDATE public.users SET password = $1 WHERE email = $2",
+            [hashedPassword, email.trim().toLowerCase()]
+        );
+        res.json({ message: "Password reset successful" });
+    } catch (err) {
+        console.error("SERVER RESET ERROR:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // -------------------Routes--------------------------
 app.get("/", (req, res) => res.send("Backend running"));
 app.get("/test-db", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT NOW()");
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
+    try {
+        const result = await pool.query("SELECT NOW()");
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 });
+
 // -------------------Family Members API-------------------
 app.get("/family-members/:user_id", async (req, res) => {
     try {
@@ -124,6 +170,7 @@ app.get("/family-members/:user_id", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 app.post("/add-family-member", async (req, res) => {
     try {
         const { user_id, name } = req.body;
@@ -136,6 +183,7 @@ app.post("/add-family-member", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 app.delete("/delete-family-member/:id", async (req, res) => {
     try {
         const { id } = req.params;
@@ -145,6 +193,7 @@ app.delete("/delete-family-member/:id", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 // -------------------Monthly Trend-------------------
 app.get("/monthly-trend/:user_id", async (req, res) => {
     try {
@@ -166,6 +215,7 @@ app.get("/monthly-trend/:user_id", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 // -------------------Monthly Comparison-------------------
 app.get("/monthly-comparison/:user_id", async (req, res) => {
     try {
@@ -188,8 +238,76 @@ app.get("/monthly-comparison/:user_id", async (req, res) => {
     }
 });
 
+// ------------------- Gemini-Powered Receipt Scan Route (PDF & Images) -------------------
+app.post("/scan-receipt", async (req, res) => {
+    try {
+        const { image_data, media_type } = req.body;
+        if (!image_data) {
+            return res.status(400).json({ error: "Image or PDF data missing" });
+        }
+
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({ error: "GEMINI_API_KEY missing in server environment variables" });
+        }
+
+        // Updated Model Name to latest Gemini 3.6 Flash
+        const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+
+        // Base64 cleaning
+        const cleanBase64 = image_data.replace(/^data:(.*);base64,/, "");
+
+        // Auto-detect MIME type
+        let mimeType = media_type || "image/jpeg";
+        if (image_data.startsWith("data:application/pdf") || cleanBase64.startsWith("JVBERi0")) {
+            mimeType = "application/pdf";
+        } else if (image_data.startsWith("data:image/png")) {
+            mimeType = "image/png";
+        } else if (image_data.startsWith("data:image/webp")) {
+            mimeType = "image/webp";
+        }
+
+        console.log(`📄 Scanning document with Gemini (Type: ${mimeType})...`);
+
+        const prompt = `Analyze this expense receipt or document and respond ONLY in valid JSON format with no markdown formatting or extra text:
+        {
+          "title": "item or store name (max 30 chars)",
+          "amount": "total amount as number only",
+          "category": "one of: Food, Travel, Shopping, Rent, Medicine, Other",
+          "notes": "brief description (max 50 chars)"
+        }`;
+
+        const documentPart = {
+            inlineData: {
+                data: cleanBase64,
+                mimeType: mimeType
+            }
+        };
+
+        const result = await model.generateContent([prompt, documentPart]);
+        const responseText = result.response.text();
+
+        // Robust JSON extraction
+        const cleanedJson = responseText.replace(/```json|```/g, "").trim();
+        const firstBrace = cleanedJson.indexOf("{");
+        const lastBrace = cleanedJson.lastIndexOf("}");
+
+        if (firstBrace !== -1 && lastBrace !== -1) {
+            const parsed = JSON.parse(cleanedJson.substring(firstBrace, lastBrace + 1));
+            console.log("✅ Receipt parsed successfully with Gemini!");
+            return res.json(parsed);
+        } else {
+            throw new Error("Could not parse valid JSON from AI response");
+        }
+
+    } catch (err) {
+        console.error("Server Scan Error:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.use("/", authRoutes);
 app.use("/", expenseRoutes);
+app.use("/", loanRoutes);
 
 // -------------------Start Server--------------------
 app.listen(5000, () => console.log("Server started on port 5000"));

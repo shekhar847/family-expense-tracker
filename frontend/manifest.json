@@ -1,0 +1,21 @@
+{
+  "name": "ExpenseIQ",
+  "short_name": "ExpenseIQ",
+  "description": "Smart Family Expense Tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e0f11",
+  "theme_color": "#c8f135",
+  "icons": [
+    {
+      "src": "Image/ExpenseIQ-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "Image/ExpenseIQ-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

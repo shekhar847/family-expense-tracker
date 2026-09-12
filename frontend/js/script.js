@@ -38,6 +38,11 @@ function showSection(id, el = null) {
             loadMonthlyComparison();
         }, 300);
     }
+    if (id === "loanSection") {
+        setTimeout(() => {
+            loadLoans();
+        }, 300);
+    }
     if (id === "settingSection" && currentUser) {
         document.getElementById("profileName").value = currentUser.name || "";
         document.getElementById("profileEmail").value = currentUser.email || "";
@@ -103,6 +108,114 @@ async function loginUser() {
         document.getElementById("loginCard").style.display = "block";
         console.log(err);
         showToast("Server Error", "danger");
+    }
+}
+// -------------------Forgot Password-------------------
+let resetCodeStore = "";
+let storedEmail = "";
+
+window.showForgotPassword = function (show = true) {
+    const loginCard = document.getElementById("loginCard");
+    const forgotCard = document.getElementById("forgotCard");
+    const forgotStep1 = document.getElementById("forgotStep1");
+    const forgotStep2 = document.getElementById("forgotStep2");
+    const forgotEmail = document.getElementById("forgotEmail");
+
+    if (loginCard) loginCard.style.display = show ? "none" : "block";
+    if (forgotCard) forgotCard.style.display = show ? "block" : "none";
+    if (forgotStep1) forgotStep1.style.display = "block";
+    if (forgotStep2) forgotStep2.style.display = "none";
+    if (forgotEmail) forgotEmail.value = "";
+    storedEmail = "";
+};
+
+window.sendResetCode = async function () {
+    const emailInput = document.getElementById("forgotEmail");
+    if (!emailInput) return;
+
+    const email = emailInput.value.trim();
+    if (!email) {
+        showToast("Please enter your email", "danger");
+        return;
+    }
+
+    storedEmail = email;
+    resetCodeStore = Math.floor(100000 + Math.random() * 900000).toString();
+
+    try {
+        await emailjs.send("service_fwocbkr", "template_8itfsjc", {
+            to_name: "User",
+            to_email: email,
+            month: "Password Reset Request",
+            total: "",
+            count: "",
+            highest_category: `Your Password Reset Code: ${resetCodeStore}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.`
+        });
+        showToast("Reset code sent successfully!");
+
+        const step1 = document.getElementById("forgotStep1");
+        const step2 = document.getElementById("forgotStep2");
+        if (step1) step1.style.display = "none";
+        if (step2) step2.style.display = "block";
+    } catch (err) {
+        console.log(err);
+        showToast("Error sending email", "danger");
+    }
+};
+
+window.verifyResetCode = async function () {
+    const codeInput = document.getElementById("resetCode");
+    const passwordInput = document.getElementById("newResetPassword");
+
+    if (!codeInput || !passwordInput) return;
+
+    const code = codeInput.value.trim();
+    const newPassword = passwordInput.value.trim();
+    const email = storedEmail;
+
+    if (!code || !newPassword) {
+        showToast("Please fill in all fields", "danger");
+        return;
+    }
+    if (code !== resetCodeStore) {
+        showToast("Invalid code — please try again", "danger");
+        return;
+    }
+    if (newPassword.length < 6) {
+        showToast("Password must be at least 6 characters long", "danger");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${BASE_URL}/reset-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, new_password: newPassword })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.message === "Password reset successful") {
+            showToast("✅ Password reset successfully! Please log in.");
+            showForgotPassword(false);
+            resetCodeStore = "";
+            storedEmail = "";
+        } else {
+            showToast(data.message || "Error", "danger");
+        }
+    } catch (err) {
+        console.log(err);
+        showToast("Server Error", "danger");
+    }
+};
+// ---------------------------ShowPassword-----------------------
+function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === "password") {
+        input.type = "text";
+        btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+    } else {
+        input.type = "password";
+        btn.innerHTML = '<i class="fa-solid fa-eye"></i>';
     }
 }
 // ---------------------------handleGoogleLogin-----------------------
@@ -187,6 +300,9 @@ function showRegisterForm() {
 function logout() {
     currentUser = null;
     localStorage.removeItem("currentUser");
+    localStorage.removeItem("activeSection");
+
+    // Data clear karo
     document.getElementById("userName").innerText = "Guest User";
     document.getElementById("userEmail").innerText = "Not logged in";
     document.getElementById("userAvatar").innerText = "?";
@@ -195,7 +311,83 @@ function logout() {
     document.getElementById("loginCard").style.display = "none";
     document.getElementById("sidebarUser").style.display = "none";
     document.getElementById("footerBadges").style.display = "none";
+
+    // Email password clear karo
+    document.getElementById("email").value = "";
+    document.getElementById("password").value = "";
+
+    // Stats reset karo
+    document.getElementById("statTotal").innerText = "0";
+    document.getElementById("statMonth").innerText = "0";
+    document.getElementById("statCount").innerText = "0";
+    document.getElementById("statAvg").innerText = "0";
+
+    // Expense list clear karo
+    document.getElementById("expenseListContainer").innerHTML = `
+        <div class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <p>No expenses recorded yet.</p>
+        </div>`;
+
+    // Family summary clear karo
+    const familySummary = document.getElementById("familySummary");
+    if (familySummary) familySummary.style.display = "none";
+
+    // Dashboard section active karo
+    showSection("dashboardSection", document.querySelector('[onclick*="dashboardSection"]'));
+
     showToast("Logged out", "danger");
+
+    // Charts clear karo
+    if (window.barChartInst) { window.barChartInst.destroy(); window.barChartInst = null; }
+    if (window.pieChartInst) { window.pieChartInst.destroy(); window.pieChartInst = null; }
+    if (window.miniChartInst) { window.miniChartInst.destroy(); window.miniChartInst = null; }
+    if (window.trendChartInst) { window.trendChartInst.destroy(); window.trendChartInst = null; }
+
+    // Report table clear karo
+    const reportBody = document.getElementById("reportTableBody");
+    if (reportBody) reportBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text3);">No data available</td></tr>`;
+
+    // Recent expenses clear karo
+    const recentExp = document.getElementById("recentExpenses");
+    if (recentExp) recentExp.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗒</div><p>No expenses yet</p></div>`;
+
+    // Family members list clear karo
+    const famList = document.getElementById("familyMembersList");
+    if (famList) famList.innerHTML = "";
+
+    // Budget status clear karo
+    const budgetStatus = document.getElementById("budgetStatus");
+    if (budgetStatus) budgetStatus.innerHTML = "";
+
+    // Budget progress clear karo
+    const budgetCard = document.getElementById("budgetProgressCard");
+    if (budgetCard) budgetCard.style.display = "none";
+
+    // highestCat clear karo
+    const highestCat = document.getElementById("highestCat");
+    if (highestCat) highestCat.innerText = "";
+
+    // allExpensesData clear karo
+    allExpensesData = [];
+
+    // Budget input clear karo
+    const budgetInput = document.getElementById("budgetInput");
+    if (budgetInput) budgetInput.value = "";
+
+    // Avatar reset karo
+    document.getElementById("userAvatar").innerText = "?";
+    document.getElementById("userAvatar").innerHTML = "?";
+
+    // Avatar preview clear karo
+    const avatarPreview = document.getElementById("avatarPreview");
+    if (avatarPreview) { avatarPreview.src = ""; avatarPreview.style.display = "none"; }
+
+    // Profile fields clear karo
+    const profileName = document.getElementById("profileName");
+    const profileEmail = document.getElementById("profileEmail");
+    if (profileName) profileName.value = "";
+    if (profileEmail) profileEmail.value = "";
 }
 // ---------------------------Add Expense-----------------------
 async function addExpense() {
@@ -257,17 +449,71 @@ async function addExpense() {
         showToast("Failed", "danger");
     }
 }
+// -------------------Receipt Scan-------------------
+async function scanReceipt(input) {
+    if (!input || !input.files || !input.files[0]) {
+        return;
+    }
+
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = async function (e) {
+        const base64String = e.target.result.split(',')[1];
+        const mediaType = file.type || "image/jpeg";
+        try {
+            const res = await fetch(`${BASE_URL}/scan-receipt`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    image_data: base64String,
+                    media_type: mediaType
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                const titleInput = document.getElementById("title") || document.getElementById("expenseTitle");
+                const amountInput = document.getElementById("amount") || document.getElementById("expenseAmount");
+                const categoryInput = document.getElementById("category") || document.getElementById("expenseCategory");
+                const descInput = document.getElementById("description") || document.getElementById("expenseNotes");
+
+                if (titleInput) titleInput.value = data.title || "";
+
+                if (amountInput) {
+                    const cleanAmount = data.amount ? String(data.amount).replace(/[^0-9.]/g, "") : "";
+                    amountInput.value = cleanAmount;
+                }
+
+                if (categoryInput) categoryInput.value = data.category || "Other";
+                if (descInput) descInput.value = data.notes || "";
+
+                alert("✅ Receipt scanned successfully!");
+            } else {
+                alert("Receipt scan nahi ho saka — manually bharo");
+            }
+        } catch (err) {
+            console.error("Scan Error:", err);
+            alert("Receipt scan nahi ho saka — manually bharo");
+        } finally {
+            input.value = "";
+        }
+    };
+
+    reader.readAsDataURL(file);
+}
 // ---------------------------Load Expense----------------------
 async function loadExpenses() {
     try {
         document.getElementById("loadingSpinner").style.display = "block";
         const res = await fetch(`${BASE_URL}/expenses/${currentUser.id}?page=1&limit=100`);
         const response = await res.json();
-        
+
         // Pagination response handle karo
         const data = response.expenses || response;
         allExpensesData = data;
-        
+
         document.getElementById("loadingSpinner").style.display = "none";
         renderExpenseList(data);
         updateStats(data);
@@ -285,8 +531,7 @@ async function loadExpenses() {
 }
 // ---------------------------Expense List----------------------
 function renderExpenseList(data) {
-    const container =
-        document.getElementById("expenseListContainer");
+    const container = document.getElementById("expenseListContainer");
     if (!container) return;
     const badge = document.getElementById("expenseCountBadge");
     if (badge) badge.innerText = `${data.length} entries`;
@@ -311,7 +556,13 @@ function renderExpenseList(data) {
             <span style="font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:10px;">
                 👤 ${e.member_name || 'Self'}
             </span>
-            ${e.tag ? `<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${e.tag === 'Urgent' ? 'var(--redbg)' : e.tag === 'Optional' ? 'var(--amberbg)' : 'var(--bluebg)'};color:${e.tag === 'Urgent' ? 'var(--red)' : e.tag === 'Optional' ? 'var(--amber)' : 'var(--blue)'};">${e.tag === 'Urgent' ? '🔴' : e.tag === 'Optional' ? '🟡' : '🔁'} ${e.tag}</span>` : ''}
+            
+            ${e.tag ? `
+                <span style="font-size:10px;padding:2px 8px;border-radius:10px; background:${e.tag === 'Urgent' ? 'var(--redbg)' : e.tag === 'Unplanned' ? 'var(--amberbg)' : 'var(--bluebg)'}; color:${e.tag === 'Urgent' ? 'var(--red)' : e.tag === 'Unplanned' ? 'var(--amber)' : 'var(--blue)'};">
+                    ${e.tag === 'Urgent' ? '🔴' : e.tag === 'Unplanned' ? '🟡' : '🔁'} ${e.tag}
+                </span>
+            ` : ''}
+
             <span class="expense-date" style="font-size:11px;color:var(--text3);">
                 ${e.date ? new Date(e.date).toLocaleDateString("en-IN") : "-"}
             </span>
@@ -496,7 +747,7 @@ function filterByDateRange() {
         item.style.display = (itemDate >= start && itemDate <= end) ? "" : "none";
     });
     document.getElementById("filterMonth").value = "all";
-    showToast("Date range filter lagaya gaya");
+    showToast("✅ Date range filter applied");
 }
 // ---------------------------FilterReport----------------------
 function filterReport() {
@@ -804,15 +1055,15 @@ async function changePassword() {
     const confirmPassword = document.getElementById("confirmPassword").value.trim();
     const status = document.getElementById("passwordStatus");
     if (!oldPassword || !newPassword || !confirmPassword) {
-        showToast("Sab fields bharo", "danger");
+        showToast("Please fill in all fields", "danger");
         return;
     }
     if (newPassword !== confirmPassword) {
-        showToast("New password match nahi kar raha", "danger");
+        showToast("New passwords do not match", "danger");
         return;
     }
     if (newPassword.length < 6) {
-        showToast("Password kam se kam 6 characters ka hona chahiye", "danger");
+        showToast("Password must be at least 6 characters long", "danger");
         return;
     }
     try {
@@ -844,8 +1095,9 @@ async function changePassword() {
 function toggleTheme() {
     document.body.classList.toggle('light');
     const isDark = !document.body.classList.contains('light');
-    const btn = document.querySelector('.theme-toggle');
+    const btn = document.getElementById("themeBtn");
     if (btn) btn.textContent = isDark ? '☀' : '🌙';
+    localStorage.setItem("theme", isDark ? "dark" : "light");
 }
 // ---------------------------Voice Assistant-------------------
 function startVoice() {
@@ -859,7 +1111,7 @@ function startVoice() {
     recognition.interimResults = false;
     btn.innerText = "🔴";
     btn.style.background = "var(--redbg)";
-    showToast("Bol rahe hain... sun raha hoon 🎤");
+    showToast("Listening...");
     recognition.start();
     recognition.onresult = function (event) {
         const text = event.results[0][0].transcript.toLowerCase();
@@ -871,7 +1123,7 @@ function startVoice() {
     recognition.onerror = function () {
         btn.innerText = "🎤";
         btn.style.background = "";
-        showToast("Awaaz nahi suni — dobara try karo", "danger");
+        showToast("Didn't quite catch that — Please try again...", "danger");
     };
     recognition.onend = function () {
         btn.innerText = "🎤";
@@ -894,7 +1146,7 @@ function processVoiceCommand(text) {
             showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
             showToast(`✅ ${title} — ₹${amount} tayar hai, Add button dabao!`);
         } else {
-            showToast("Amount nahi mila — dobara bolein", "danger");
+            showToast("Could not detect the amount. Please speak again.", "danger");
         }
     }
     // -------------------This Month-------------------
@@ -902,25 +1154,25 @@ function processVoiceCommand(text) {
         document.getElementById("filterMonth").value = "this";
         filterByMonth();
         showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
-        showToast("✅ Is mahine ke kharche dikh rahe hain");
+        showToast("✅ Showing this month's expenses");
     }
     // -------------------Last Month-------------------
     else if (t.includes("पिछले महीने") || t.includes("pichle mahine") || t.includes("last month")) {
         document.getElementById("filterMonth").value = "last";
         filterByMonth();
         showSection('expenseSection', document.querySelector('[onclick*=expenseSection]'));
-        showToast("✅ Pichle mahine ke kharche");
+        showToast("✅ Showing last month's expenses");
     }
     // -------------------PDF-------------------
     else if (t.includes("pdf") || t.includes("रिपोर्ट") || t.includes("report") || t.includes("download") || t.includes("डाउनलोड")) {
         showSection('reportSection', document.querySelector('[onclick*=reportSection]'));
         setTimeout(() => downloadReport(), 500);
-        showToast("✅ PDF download ho raha hai...");
+        showToast("📄 Downloading PDF...");
     }
     // -------------------Dashboard-------------------
     else if (t.includes("dashboard") || t.includes("डैशबोर्ड") || t.includes("home") || t.includes("होम")) {
         showSection('dashboardSection', document.querySelector('[onclick*=dashboardSection]'));
-        showToast("✅ Dashboard khul gaya");
+        showToast("✅ Dashboard loaded successfully!");
     }
     // -------------------Reports-------------------
     else if (t.includes("chart") || t.includes("चार्ट") || t.includes("graph") || t.includes("रिपोर्ट")) {
@@ -939,7 +1191,7 @@ function processVoiceCommand(text) {
             localStorage.setItem("monthlyBudget", amount);
             document.getElementById("budgetInput").value = amount;
             checkBudget();
-            showToast(`✅ Budget ₹${amount} set ho gaya`);
+            showToast(`✅ Budget set to ₹${amount}`);
         }
     }
     // -------------------Logout-------------------
@@ -1075,7 +1327,7 @@ function downloadReport() {
 function downloadCSV() {
     const rows = document.querySelectorAll("#reportTableBody tr");
     if (rows.length === 0) {
-        showToast("Koi data nahi", "danger");
+        showToast("No data available", "danger");
         return;
     }
     let csv = "No,Title,Category,Amount,Date\n";
@@ -1092,7 +1344,7 @@ function downloadCSV() {
         csv += `${index + 1},${title},${category},${amount},${date}\n`;
     });
     if (!hasData) {
-        showToast("Koi visible data nahi", "danger");
+        showToast("No data available to show", "danger");
         return;
     }
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -1123,14 +1375,14 @@ function sendEmailReport() {
         count: count,
         highest_category: highest
     };
-    showToast("Email bhej rahe hain...");
+    showToast("Sending email...", "info");
     emailjs.send("service_fwocbkr", "template_8itfsjc", templateParams)
         .then(() => {
-            showToast("✅ Email bhej diya gaya!");
+            showToast("✅ Email sent successfully!", "success");
         })
         .catch((err) => {
             console.log(err);
-            showToast("Email bhejne mein error", "danger");
+            showToast("Failed to send email. Please try again.", "danger");
         });
 }
 // ---------------------------WhatsApp Share--------------------
@@ -1157,7 +1409,7 @@ function shareWhatsApp() {
 function saveBudget() {
     const budget = Number(document.getElementById("budgetInput").value);
     if (!budget || budget <= 0) {
-        showToast("Valid budget daalo", "danger");
+        showToast("Please enter a valid budget amount", "danger");
         return;
     }
     localStorage.setItem("monthlyBudget", budget);
@@ -1168,7 +1420,7 @@ function saveBudget() {
 async function addFamilyMember() {
     const name = document.getElementById("memberName").value.trim();
     if (!name) {
-        showToast("Naam likho", "danger");
+        showToast("Please enter a name", "danger");
         return;
     }
     if (!currentUser) {
@@ -1215,10 +1467,10 @@ async function loadFamilyMembers() {
     }
 }
 async function deleteFamilyMember(id) {
-    if (!confirm("Is member ko delete karo?")) return;
+    if (!confirm("Are you sure you want to remove this member?")) return;
     try {
         await fetch(`${BASE_URL}/delete-family-member/${id}`, { method: "DELETE" });
-        showToast("Member delete ho gaya", "danger");
+        showToast("Member successfully remove", "danger");
         loadFamilyMembers();
     } catch (err) {
         showToast("Error", "danger");
@@ -1304,6 +1556,13 @@ async function uploadAvatar() {
 }
 // ---------------------------Page load pe check karo-----------
 window.addEventListener("load", () => {
+    // Theme load karo
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light") {
+        document.body.classList.add("light");
+        const btn = document.getElementById("themeBtn");
+        if (btn) btn.textContent = '🌙';
+    }
     const saved = localStorage.getItem("currentUser");
     if (saved) {
         const user = JSON.parse(saved);
@@ -1337,3 +1596,112 @@ document.getElementById("category").addEventListener("change", function () {
         customGroup.style.display = "none";
     }
 });
+// ---------------------------Udhar / Loan Tracker--------------
+async function addLoan() {
+    if (!currentUser) {
+        showToast("Login first", "danger");
+        return;
+    }
+    const type = document.getElementById("loanType").value;
+    const person_name = document.getElementById("loanPersonName").value.trim();
+    const amount = document.getElementById("loanAmount").value.trim();
+    const date = document.getElementById("loanDate").value;
+
+    if (!person_name || !amount || Number(amount) <= 0) {
+        showToast("Please enter valid Person Name and Amount", "danger");
+        return;
+    }
+
+    try {
+        await fetch(`${BASE_URL}/add-loan`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                person_name,
+                type,
+                amount,
+                date
+            })
+        });
+        document.getElementById("loanPersonName").value = "";
+        document.getElementById("loanAmount").value = "";
+        document.getElementById("loanDate").value = "";
+        showToast("Udhar entry added!");
+        loadLoans();
+    } catch (err) {
+        console.error(err);
+        showToast("Failed to add Udhar", "danger");
+    }
+}
+
+async function loadLoans() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(`${BASE_URL}/loans/${currentUser.id}`);
+        const loans = await res.json();
+        renderLoanList(loans);
+    } catch (err) {
+        console.error(err);
+        showToast("Failed to load Udhar entries", "danger");
+    }
+}
+
+function renderLoanList(data) {
+    const container = document.getElementById("loanTableBody");
+    if (!container) return;
+    if (data.length === 0) {
+        container.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3);">No udhar tracked yet</td></tr>`;
+        return;
+    }
+    
+    container.innerHTML = data.map((loan, index) => {
+        const statusColor = loan.status === 'Settled' ? 'color:#3dd9a4;' : 'color:var(--amber);';
+        const typeColor = loan.type === 'Given' ? 'color:var(--red);' : 'color:#3dd9a4;';
+        
+        return `
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${loan.person_name}</strong></td>
+                <td style="${typeColor}">${loan.type}</td>
+                <td style="text-align:right;">₹${Number(loan.amount).toFixed(2)}</td>
+                <td>${loan.date ? new Date(loan.date).toLocaleDateString("en-IN") : "-"}</td>
+                <td style="${statusColor} font-weight:bold;">${loan.status}</td>
+                <td>
+                    ${loan.status === 'Pending' 
+                        ? `<button class="btn-primary-custom" style="padding:4px 8px; font-size:11px;" onclick="updateLoanStatus(${loan.id}, 'Settled')">Mark Settled</button>` 
+                        : `<button class="btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="updateLoanStatus(${loan.id}, 'Pending')">Mark Pending</button>`
+                    }
+                    <button class="btn-del" onclick="deleteLoan(${loan.id})" style="margin-left:4px;">🗑</button>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+async function updateLoanStatus(id, newStatus) {
+    try {
+        await fetch(`${BASE_URL}/update-loan-status/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus })
+        });
+        showToast(`Udhar marked as ${newStatus}`);
+        loadLoans();
+    } catch (err) {
+        console.error(err);
+        showToast("Failed to update status", "danger");
+    }
+}
+
+async function deleteLoan(id) {
+    if (!confirm("Are you sure you want to delete this udhar entry?")) return;
+    try {
+        await fetch(`${BASE_URL}/delete-loan/${id}`, { method: "DELETE" });
+        showToast("Udhar entry deleted");
+        loadLoans();
+    } catch (err) {
+        console.error(err);
+        showToast("Failed to delete", "danger");
+    }
+}

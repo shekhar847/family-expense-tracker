@@ -4,8 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#c8f135">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <title>ExpenseIQ — Smart Expense Tracker</title>
-    <link rel="shortcut icon" href="Image/ExpenseIQ-logo.png" type="image/x-icon">
+    <link rel="icon" href="Image/ExpenseIQ-logo.png" type="image/png">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
@@ -32,16 +36,19 @@
         <nav class="sidebar-nav">
             <div class="nav-label">Menu</div>
             <div class="nav-item active" onclick="showSection('dashboardSection', this)">
-                <span class="nav-icon">◈</span> Dashboard
+                <span class="nav-icon">📊</span> Dashboard
             </div>
             <div class="nav-item" onclick="showSection('expenseSection', this)">
-                <span class="nav-icon">◇</span> Expenses
+                <span class="nav-icon">💸</span> Expenses
+            </div>
+            <div class="nav-item" onclick="showSection('loanSection', this)">
+                <span class="nav-icon">🤝</span> Udhar Tracker
             </div>
             <div class="nav-item" onclick="showSection('reportSection', this)">
-                <span class="nav-icon">◎</span> Reports
+                <span class="nav-icon">📈</span> Reports
             </div>
             <div class="nav-item" onclick="showSection('settingSection', this)">
-                <span class="nav-icon">◉</span> Settings
+                <span class="nav-icon">⚙️</span> Settings
             </div>
         </nav>
         <div class="sidebar-user" id="sidebarUser" style="display:none;">
@@ -68,7 +75,7 @@
             </div>
             <div class="topbar-right">
                 <button class="theme-toggle" onclick="startVoice()" title="Voice Assistant" id="voiceBtn">🎤</button>
-                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀</button>
+                <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" title="Toggle theme">☀</button>
             </div>
         </div>
         <!-- ------------------------------Dashboard------------------------- -->
@@ -119,13 +126,23 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Email address</label>
-                                <input type="email" id="email" placeholder="you@example.com">
+                                <input type="email" id="email" placeholder="you@example.com" autocomplete="off">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" style="position:relative;">
                                 <label class="form-label">Password</label>
-                                <input type="password" id="password" placeholder="••••••••">
+                                <input type="password" id="password" placeholder="••••••••" autocomplete="new-password" style="padding-right:40px;">
+                                <button type="button" onclick="togglePassword('password', this)" 
+                                    style="position:absolute;right:10px;bottom:9px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
                             </div>
                             <button class="btn-primary-custom" style="width:100%;margin-top:8px;" onclick="loginUser()"> Sign in →</button>
+                            <div style="text-align:right;margin-top:6px;">
+                                <span onclick="showForgotPassword()" 
+                                    style="font-size:12px;color:var(--accent);cursor:pointer;text-decoration:underline;">
+                                    Forgot Password?
+                                </span>
+                            </div>
                             <div style="margin-top:12px;text-align:center;">
                                 <div id="g_id_onload"
                                     data-client_id="716678461904-1kul91j20k4v9jql1e1ao88p8ev1acg9.apps.googleusercontent.com"
@@ -146,28 +163,69 @@
                         </div>
                     </div>
                 </div>
+                <!-- ----------------------Forgot Password Card------------------------ -->
+                <div id="forgotCard" class="login-wrapper" style="display:none;">
+                    <div class="card-panel">
+                        <div class="card-body" style="padding:28px;">
+                            <div class="login-header">
+                                <div class="login-icon">🔑</div>
+                                <div class="login-title">Reset Password</div>
+                                <div class="login-sub">Enter your email to receive reset code</div>
+                            </div>
+                            <div id="forgotStep1">
+                                <div class="form-group">
+                                    <label class="form-label">Email address</label>
+                                    <input type="email" id="forgotEmail" placeholder="you@example.com">
+                                </div>
+                                <button class="btn-primary-custom" style="width:100%;margin-top:8px;" onclick="sendResetCode()">
+                                    Send Reset Code →
+                                </button>
+                            </div>
+                            <div id="forgotStep2" style="display:none;">
+                                <div class="form-group">
+                                    <label class="form-label">Reset Code (6 digits)</label>
+                                    <input type="text" id="resetCode" placeholder="Enter code">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">New Password</label>
+                                    <input type="password" id="newResetPassword" placeholder="New password">
+                                </div>
+                                <button class="btn-primary-custom" style="width:100%;margin-top:8px;" onclick="verifyResetCode()">
+                                    Reset Password →
+                                </button>
+                            </div>
+                            <div style="text-align:center;margin-top:12px;">
+                                <span onclick="showForgotPassword(false)" 
+                                    style="font-size:12px;color:var(--text3);cursor:pointer;text-decoration:underline;">
+                                    Back to Login
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- ----------------------Dashboard State------------------- -->
                 <div id="dashboardContent" style="display:none;">
                     <div class="stat-grid">
                         <div class="stat-card green">
                             <div class="stat-label">Total Expenses</div>
                             <div class="stat-value">₹<span id="statTotal">0</span></div>
-                            <div class="stat-icon">◈</div>
+                            <div class="stat-icon">💸</div>
                         </div>
                         <div class="stat-card blue">
                             <div class="stat-label">This Month</div>
                             <div class="stat-value">₹<span id="statMonth">0</span></div>
-                            <div class="stat-icon">◎</div>
+                            <div class="stat-icon">📈</div>
                         </div>
-                        <div class="stat-card amber">
+                       <div class="stat-card amber">
                             <div class="stat-label">Transactions</div>
                             <div class="stat-value"><span id="statCount">0</span></div>
-                            <div class="stat-icon">◇</div>
+                            <div class="stat-icon">🧾</div>
                         </div>
+                        
                         <div class="stat-card red">
                             <div class="stat-label">Avg. per Entry</div>
                             <div class="stat-value">₹<span id="statAvg">0</span></div>
-                            <div class="stat-icon">◉</div>
+                            <div class="stat-icon">➗</div>
                         </div>
                     </div>
                     <div id="highestCat" style="text-align:right;font-size:13px;color:var(--accent);margin-bottom:16px;font-weight:600;"></div>
@@ -232,9 +290,10 @@
                                 <select id="category">
                                     <option value="">Select</option>
                                     <option value="Food">🥗 Food</option>
-                                    <option value="Travel">✈ Travel</option>
+                                    <option value="Travel">🚗 Travel</option>
                                     <option value="Rent">🏠 Rent</option>
-                                    <option value="Shopping">🛍 Shopping</option>
+                                    <option value="Shopping">🛍️ Shopping</option>
+                                    <option value="Bills & Utilities">💡 Bills & Utilities</option>
                                     <option value="Other">📦 Other</option>
                                     <option value="__custom__">➕ Add Custom</option>
                                 </select>
@@ -245,7 +304,7 @@
                             </div>
                             <div>
                                 <label class="form-label">Title</label>
-                                <input type="text" id="title" placeholder="e.g. Dinner at restaurant">
+                                <input type="text" id="title" placeholder="Name of item, bill, or service...">
                             </div>
                             <div>
                                 <label class="form-label">Amount (₹)</label>
@@ -258,16 +317,23 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Notes (Optional)</label>
-                                <input type="text" id="expenseNotes" placeholder="e.g. Medical bill, Office trip">
+                                <label class="form-label">Description</label>
+                                <input type="text" id="expenseNotes" placeholder="Add any extra details...">
+                            </div>
+                            <div>
+                                <label class="form-label">Scan Receipt</label>
+                                <input type="file" id="receiptInput" accept="image/*" capture="environment" style="display:none;" onchange="scanReceipt(this)">
+                                <button class="btn-ghost" onclick="document.getElementById('receiptInput').click()" style="width:100%;">
+                                    📷 Scan Receipt
+                                </button>
                             </div>
                             <div>
                                 <label class="form-label">Tag</label>
                                 <select id="expenseTag">
                                     <option value="">No Tag</option>
                                     <option value="Urgent">🔴 Urgent</option>
-                                    <option value="Optional">🟡 Optional</option>
-                                    <option value="Recurring">🔁 Recurring</option>
+                                    <option value="Unplanned">🟡 Unplanned</option>
+                                    <option value="Mandatory">🔁 Mandatory</option>
                                 </select>
                             </div>
                             <div>
@@ -394,6 +460,66 @@
                     </table>
                 </div>
             </div>
+            <!-- --------------------------Udhar / Loans------------------------- -->
+            <div id="loanSection" class="section" style="display:none;">
+                <div class="card-panel" style="margin-bottom:20px;">
+                    <div class="card-header-row">
+                        <div class="card-title">Add Udhar / Loan</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="expense-input-row">
+                            <div>
+                                <label class="form-label">Type</label>
+                                <select id="loanType">
+                                    <option value="Given">Given (I gave money)</option>
+                                    <option value="Taken">Taken (I borrowed money)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Person Name</label>
+                                <input type="text" id="loanPersonName" placeholder="e.g. Rahul, Aman">
+                            </div>
+                            <div>
+                                <label class="form-label">Amount (₹)</label>
+                                <input type="number" id="loanAmount" placeholder="0.00" min="0">
+                            </div>
+                            <div>
+                                <label class="form-label">Date</label>
+                                <input type="date" id="loanDate">
+                            </div>
+                            <div>
+                                <label class="form-label">&nbsp;</label>
+                                <button class="btn-primary-custom" onclick="addLoan()">Add Loan +</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-panel">
+                    <div class="card-header-row">
+                        <div class="card-title">Active Udhar / Loans</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Person</th>
+                                    <th>Type</th>
+                                    <th style="text-align:right;">Amount</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="loanTableBody">
+                                <tr>
+                                    <td colspan="7" style="text-align:center;padding:24px;color:var(--text3);">No udhar tracked yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             <!-- --------------------------Setting--------------------------- -->
             <div id="settingSection" class="section">
                 <div class="settings-section">
@@ -414,14 +540,14 @@
                 </div>
                 <div class="settings-section">
                     <div class="settings-title">👤 Profile</div>
-                    <div class="two-col" style="gap:12px;">
+                    <div style="display:flex;flex-direction:column;gap:12px;">
                         <div>
                             <label class="form-label">Display Name</label>
-                            <input type="text" id="profileName" placeholder="Your name">
+                            <input type="text" id="profileName" placeholder="Your name" style="max-width:400px;">
                         </div>
                         <div>
                             <label class="form-label">Email</label>
-                            <input type="email" id="profileEmail" placeholder="your@email.com">
+                            <input type="email" id="profileEmail" placeholder="your@email.com" style="max-width:400px;">
                         </div>
                     </div>
                     <button class="btn-primary-custom" style="margin-top:14px;" onclick="saveProfile()"> Save
@@ -472,13 +598,13 @@
                     <div id="budgetStatus" style="margin-top:10px;font-size:13px;color:var(--text2);"></div>
                 </div>
                 <div class="settings-section">
-                    <div class="settings-title">👨‍👩‍👧‍👦 Family Members</div>
+                <div class="settings-title">👨‍👩‍👧‍👦 Family Members</div>
                     <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">
                         Family members add karo — unke kharche alag track karo.
                     </p>
                     <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;">
-                        <input type="text" id="memberName" placeholder="e.g. Papa, Mummy, Bhai">
-                        <button class="btn-primary-custom" onclick="addFamilyMember()">Add +</button>
+                        <input type="text" id="memberName" placeholder="e.g. Papa, Mummy, Bhai" style="max-width:300px;">
+                        <button class="btn-primary-custom" onclick="addFamilyMember()" style="white-space:nowrap;padding:9px 16px;font-size:15px;">Add +</button>
                     </div>
                     <div id="familyMembersList"></div>
                 </div>
