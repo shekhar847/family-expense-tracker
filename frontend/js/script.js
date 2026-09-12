@@ -1705,3 +1705,16 @@ async function deleteLoan(id) {
         showToast("Failed to delete", "danger");
     }
 }
+
+// ---------------------------Close Sidebar on Outside Click---------------------------
+document.addEventListener("click", function(event) {
+    const sidebar = document.querySelector(".sidebar");
+    const hamburger = document.querySelector(".hamburger");
+    
+    // If sidebar is open and the click is outside sidebar and outside hamburger
+    if (sidebar && sidebar.classList.contains("open")) {
+        if (!sidebar.contains(event.target) && hamburger && !hamburger.contains(event.target)) {
+            sidebar.classList.remove("open");
+        }
+    }
+});
