@@ -34,6 +34,11 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
     const user = userResult.rows[0];
+    
+    if (user.password === "google-oauth") {
+      return res.status(400).json({ message: "This email is registered with Google. Please click 'Sign in with Google'." });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid password" });
