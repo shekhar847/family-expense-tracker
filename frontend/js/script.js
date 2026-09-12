@@ -43,6 +43,11 @@ function showSection(id, el = null) {
             loadLoans();
         }, 300);
     }
+    if (id === "emiSection") {
+        setTimeout(() => {
+            loadEmis();
+        }, 300);
+    }
     if (id === "settingSection" && currentUser) {
         document.getElementById("profileName").value = currentUser.name || "";
         document.getElementById("profileEmail").value = currentUser.email || "";
@@ -1703,6 +1708,149 @@ async function deleteLoan(id) {
     } catch (err) {
         console.error(err);
         showToast("Failed to delete", "danger");
+    }
+}
+
+// ---------------------------EMI Tracker-------------------------------
+async function loadEmis() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(`${BASE_URL}/api/emis/${currentUser.id}`);
+        const emis = await res.json();
+        
+        const container = document.getElementById("emiCardsContainer");
+        if (emis.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🏛️</div>
+                    <p>No EMIs tracked yet</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '<div class="emi-grid">';
+        emis.forEach(emi => {
+            const principal = parseFloat(emi.principal);
+            const emiAmt = parseFloat(emi.emi_amount);
+            const total = parseFloat(emi.total_payable);
+            const paid = parseFloat(emi.amount_paid);
+            
+            const progressPercent = total > 0 ? Math.min((paid / total) * 100, 100) : 0;
+            const statusClass = emi.status === 'Completed' ? 'completed' : 'active';
+            
+            html += `
+                <div class="emi-card">
+                    <div class="emi-card-header">
+                        <div class="emi-title">${emi.title}</div>
+                        <div class="emi-status ${statusClass}">${emi.status}</div>
+                    </div>
+                    
+                    <div class="emi-detail-row">
+                        <span>Principal:</span>
+                        <span>₹${principal.toFixed(2)}</span>
+                    </div>
+                    <div class="emi-detail-row">
+                        <span>Interest:</span>
+                        <span>${emi.interest_rate}%</span>
+                    </div>
+                    <div class="emi-detail-row">
+                        <span>Tenure:</span>
+                        <span>${emi.tenure_months} Months</span>
+                    </div>
+                    <div class="emi-detail-row">
+                        <span>Monthly EMI:</span>
+                        <span style="color:var(--accent);">₹${emiAmt.toFixed(2)}</span>
+                    </div>
+                    
+                    <div class="emi-progress-container">
+                        <div class="emi-progress-text">
+                            <span>Paid: ₹${paid.toFixed(0)}</span>
+                            <span>Total: ₹${total.toFixed(0)}</span>
+                        </div>
+                        <div class="emi-progress-bg">
+                            <div class="emi-progress-fill" style="width: ${progressPercent}%;"></div>
+                        </div>
+                    </div>
+                    
+                    ${emi.status === 'Active' ? `
+                        <button class="btn-primary-custom" style="width:100%;margin-top:4px;" onclick="payEmi(${emi.id})">
+                            Pay Next EMI (₹${emiAmt.toFixed(0)})
+                        </button>
+                    ` : `
+                        <button class="btn-primary-custom" style="width:100%;margin-top:4px;opacity:0.5;cursor:not-allowed;" disabled>
+                            Loan Settled
+                        </button>
+                    `}
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+        
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function addEmi() {
+    if (!currentUser) return showToast("Please login first", "danger");
+    
+    const title = document.getElementById("emiTitle").value.trim();
+    const principal = document.getElementById("emiPrincipal").value;
+    const interest_rate = document.getElementById("emiInterest").value;
+    const tenure = document.getElementById("emiTenure").value;
+    
+    if (!title || !principal || !interest_rate || !tenure) {
+        return showToast("Please fill all EMI fields", "danger");
+    }
+    
+    try {
+        const res = await fetch(`${BASE_URL}/api/emis`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                title,
+                principal,
+                interest_rate,
+                tenure_months: tenure
+            })
+        });
+        
+        if (res.ok) {
+            showToast("EMI added successfully", "success");
+            document.getElementById("emiTitle").value = "";
+            document.getElementById("emiPrincipal").value = "";
+            document.getElementById("emiInterest").value = "";
+            document.getElementById("emiTenure").value = "";
+            loadEmis();
+        } else {
+            showToast("Failed to add EMI", "danger");
+        }
+    } catch (err) {
+        console.error(err);
+        showToast("Error adding EMI", "danger");
+    }
+}
+
+async function payEmi(id) {
+    if (!currentUser) return;
+    
+    try {
+        const res = await fetch(`${BASE_URL}/api/emis/${id}/pay`, {
+            method: 'PUT'
+        });
+        
+        if (res.ok) {
+            showToast("EMI Payment Logged!", "success");
+            loadEmis();
+        } else {
+            showToast("Failed to log EMI", "danger");
+        }
+    } catch (err) {
+        console.error(err);
+        showToast("Error logging EMI", "danger");
     }
 }
 

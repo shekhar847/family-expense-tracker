@@ -121,6 +121,21 @@ pool.query(`CREATE TABLE IF NOT EXISTS public.loans (
 )`).then(() => console.log("loans table ready"))
     .catch(err => console.log("loans table error:", err.message));
 
+pool.query(`CREATE TABLE IF NOT EXISTS public.emis (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER,
+  title TEXT,
+  principal NUMERIC(10,2),
+  interest_rate NUMERIC(5,2),
+  tenure_months INTEGER,
+  emi_amount NUMERIC(10,2),
+  total_payable NUMERIC(10,2),
+  amount_paid NUMERIC(10,2) DEFAULT 0,
+  status TEXT DEFAULT 'Active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`).then(() => console.log("emis table ready"))
+    .catch(err => console.log("emis table error:", err.message));
+
 // -------------------Reset Password API-------------------
 app.post("/reset-password", async (req, res) => {
     try {
@@ -309,6 +324,77 @@ app.post("/scan-receipt", async (req, res) => {
 app.use("/", authRoutes);
 app.use("/", expenseRoutes);
 app.use("/", loanRoutes);
+
+// -------------------EMI Routes-------------------
+app.post("/api/emis", async (req, res) => {
+    try {
+        const { user_id, title, principal, interest_rate, tenure_months } = req.body;
+        // EMI Calculation
+        const P = parseFloat(principal);
+        const r = parseFloat(interest_rate) / (12 * 100);
+        const n = parseInt(tenure_months);
+        let emi = 0;
+        if (r > 0) {
+            emi = P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+        } else {
+            emi = P / n;
+        }
+        const total_payable = emi * n;
+        
+        const result = await pool.query(
+            "INSERT INTO public.emis (user_id, title, principal, interest_rate, tenure_months, emi_amount, total_payable) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+            [user_id, title, P, parseFloat(interest_rate), n, emi, total_payable]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get("/api/emis/:user_id", async (req, res) => {
+    try {
+        const { user_id } = req.params;
+        const result = await pool.query("SELECT * FROM public.emis WHERE user_id = $1 ORDER BY created_at DESC", [user_id]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put("/api/emis/:id/pay", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const emiResult = await pool.query("SELECT * FROM public.emis WHERE id = $1", [id]);
+        if (emiResult.rows.length === 0) return res.status(404).json({ error: "EMI not found" });
+        
+        const emi = emiResult.rows[0];
+        let newPaid = parseFloat(emi.amount_paid) + parseFloat(emi.emi_amount);
+        let status = emi.status;
+        
+        if (newPaid >= parseFloat(emi.total_payable)) {
+            newPaid = parseFloat(emi.total_payable);
+            status = 'Completed';
+        }
+        
+        const result = await pool.query(
+            "UPDATE public.emis SET amount_paid = $1, status = $2 WHERE id = $3 RETURNING *",
+            [newPaid, status, id]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete("/api/emis/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query("DELETE FROM public.emis WHERE id = $1", [id]);
+        res.json({ message: "EMI deleted successfully" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // -------------------Start Server--------------------
 app.listen(5000, () => console.log("Server started on port 5000"));
