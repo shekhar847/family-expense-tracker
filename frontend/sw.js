@@ -1,4 +1,4 @@
-const CACHE_NAME = "expenseiq-v2";
+const CACHE_NAME = "expenseiq-v3";
 const urlsToCache = [
     "/",
     "/index.html",
