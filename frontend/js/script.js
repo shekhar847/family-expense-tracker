@@ -1866,3 +1866,35 @@ document.addEventListener("click", function(event) {
         }
     }
 });
+
+// --------------------------- AI Spending Advice ---------------------------
+async function fetchAIAdvice() {
+    if (!currentUser) return showToast("Please login first", "danger");
+
+    const contentDiv = document.getElementById("aiAdviceContent");
+    const loadingDiv = document.getElementById("aiAdviceLoading");
+    const textDiv = document.getElementById("aiAdviceText");
+    const btn = document.getElementById("aiAdviceBtn");
+
+    contentDiv.style.display = "none";
+    loadingDiv.style.display = "block";
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${BASE_URL}/api/ai-advice/${currentUser.id}`);
+        const data = await res.json();
+
+        if (res.ok) {
+            textDiv.innerHTML = data.advice;
+            contentDiv.style.display = "block";
+        } else {
+            showToast(data.error || "Failed to fetch AI advice", "danger");
+        }
+    } catch (err) {
+        console.error(err);
+        showToast("Error connecting to AI service", "danger");
+    } finally {
+        loadingDiv.style.display = "none";
+        btn.disabled = false;
+    }
+}

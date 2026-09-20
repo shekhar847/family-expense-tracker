@@ -321,6 +321,45 @@ app.post("/scan-receipt", async (req, res) => {
     }
 });
 
+// ------------------- AI Spending Advice -------------------
+app.get("/api/ai-advice/:user_id", async (req, res) => {
+    try {
+        const { user_id } = req.params;
+        
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({ error: "GEMINI_API_KEY missing in server environment variables" });
+        }
+
+        // Fetch user's expenses grouped by category for the current month
+        const expensesResult = await pool.query(
+            `SELECT category, SUM(amount) as total 
+             FROM public.expenses 
+             WHERE user_id = $1 
+             AND date >= date_trunc('month', CURRENT_DATE) 
+             GROUP BY category`,
+            [user_id]
+        );
+
+        if (expensesResult.rows.length === 0) {
+            return res.json({ advice: "You have no expenses recorded for this month yet. Start adding some to get personalized AI advice!" });
+        }
+
+        const expenseData = expensesResult.rows.map(row => `${row.category}: ₹${row.total}`).join(", ");
+        
+        const prompt = `You are an expert financial advisor. Here is a summary of a user's spending this month by category: ${expenseData}. 
+        Provide a brief, encouraging, and actionable piece of advice (2-3 short paragraphs) on how they might optimize their spending or save money. Keep the tone friendly and use emojis. Format it beautifully with HTML tags like <b>, <br>, <ul><li> so it can be directly rendered.`;
+
+        const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+        const result = await model.generateContent(prompt);
+        const advice = result.response.text();
+        
+        res.json({ advice });
+    } catch (err) {
+        console.error("AI Advice Error:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.use("/", authRoutes);
 app.use("/", expenseRoutes);
 app.use("/", loanRoutes);

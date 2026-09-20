@@ -27,6 +27,7 @@
 ## ✨ Features
 
 - 🤖 **Gemini AI Receipt Scanner**: Upload receipts (JPEG, PNG, WebP) or PDF invoices, and Google's Gemini AI (`gemini-3.6-flash`) automatically extracts transaction title, amount, category, and notes.
+- 🤖 **AI Spending Advice**: Receive personalized spending insights and financial advice powered by AI based on your expense history.
 - 🔐 **Secure Authentication & OAuth**: Full authentication workflow supporting standard Email/Password registration, bcrypt password hashing, Password Reset, and **Google One-Tap OAuth 2.0 login**.
 - 👨‍👩‍👧‍👦 **Family Member Management**: Add and assign specific expenses to individual family members or track personal (`Self`) transactions seamlessly.
 - 📊 **Analytics & Visual Dashboards**: Interactive charts built with Chart.js displaying:
@@ -34,6 +35,8 @@
   - 6-Month Monthly Spending Trends
   - Month-over-Month Category Comparison
 - 💸 **Complete Expense Management**: Create, Edit, Delete, Tag, Filter, and Search transactions with category tagging (`Food`, `Travel`, `Shopping`, `Rent`, `Medicine`, `Other`).
+- 🤝 **Udhar (Loan) Tracker**: Manage personal debts, track money lent or borrowed, and update settlement statuses.
+- 🏛️ **EMI Tracker**: Monitor Equated Monthly Installments, track principal, interest, and payment progress for active loans.
 - 🖼️ **Cloudinary Avatar Uploads**: Profile picture upload integrated with Cloudinary cloud storage.
 - 🌙 **Modern Dark Theme UI**: Sleek dark aesthetic (`#0e0f11` with neon `#c8f135` accents) with responsive design for desktop, tablet, and mobile devices.
 - 📱 **Progressive Web App (PWA)**: Web Manifest configuration ready for standalone installation.
@@ -140,6 +143,33 @@ The database automatically initializes the following tables upon server startup 
 | `date` | `DATE` | `DEFAULT CURRENT_DATE` |
 | `created_at` | `TIMESTAMP` | `DEFAULT CURRENT_TIMESTAMP` |
 
+### `public.loans`
+| Column | Type | Constraints |
+| :--- | :--- | :--- |
+| `id` | `SERIAL` | `PRIMARY KEY` |
+| `user_id` | `INTEGER` | `REFERENCES users(id)` |
+| `person_name` | `TEXT` | |
+| `type` | `TEXT` | |
+| `amount` | `NUMERIC(10,2)` | |
+| `status` | `TEXT` | `DEFAULT 'Pending'` |
+| `date` | `DATE` | `DEFAULT CURRENT_DATE` |
+| `created_at` | `TIMESTAMP` | `DEFAULT CURRENT_TIMESTAMP` |
+
+### `public.emis`
+| Column | Type | Constraints |
+| :--- | :--- | :--- |
+| `id` | `SERIAL` | `PRIMARY KEY` |
+| `user_id` | `INTEGER` | `REFERENCES users(id)` |
+| `title` | `TEXT` | |
+| `principal` | `NUMERIC(10,2)` | |
+| `interest_rate`| `NUMERIC(5,2)` | |
+| `tenure_months`| `INTEGER` | |
+| `emi_amount` | `NUMERIC(10,2)` | |
+| `total_payable`| `NUMERIC(10,2)` | |
+| `amount_paid` | `NUMERIC(10,2)` | `DEFAULT 0` |
+| `status` | `TEXT` | `DEFAULT 'Active'` |
+| `created_at` | `TIMESTAMP` | `DEFAULT CURRENT_TIMESTAMP` |
+
 ---
 
 ## ⚡ Installation & Local Setup
@@ -200,6 +230,16 @@ npx http-server -p 3000
 - `GET /family-members/:user_id` — Fetch registered family members
 - `POST /add-family-member` — Add a new family member
 - `DELETE /delete-family-member/:id` — Remove a family member
+
+### **Loans & EMIs**
+- `GET /api/loans/:user_id` — Fetch user's Udhar/Loans
+- `POST /api/add-loan` — Create a new Udhar/Loan entry
+- `PUT /api/update-loan-status/:id` — Update loan settlement status
+- `DELETE /api/delete-loan/:id` — Delete a loan record
+- `GET /api/emis/:user_id` — Fetch user's EMIs
+- `POST /api/emis` — Create a new EMI tracker
+- `PUT /api/emis/:id/pay` — Log an EMI payment
+- `DELETE /api/emis/:id` — Delete an EMI tracker
 
 ### **Analytics & AI**
 - `GET /monthly-trend/:user_id` — Fetch 6-month historical spending totals
